@@ -2,10 +2,10 @@
   "name": "itemtify",
   "version": "1.0.0",
   "description": "ItemTify - API REST em Node.js com Express, modular e organizado para gerenciamento de itens de estoque.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "keywords": [
     "nodejs",
