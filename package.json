@@ -16,7 +16,7 @@
     "backend",
     "modular"
   ],
-  "author": "CT (Marcos Tavares), Izidio (Pedro Izidio), Rick",
+  "author": "CT (Marcos Tavares), Izidio (Pedro Izidio), Rickinho3 (Richard Bryan)",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
