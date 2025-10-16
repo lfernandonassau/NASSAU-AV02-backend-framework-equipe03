@@ -39,7 +39,7 @@ const inventory = [
 
 let nextId = inventory.length + 1;
 const generateId = () => {
-  const newId = `item_${String(nextId++).padStart(3, '0')}`;
+  const newId = `${String(nextId++).padStart(3, '0')}`;
   return newId;
 }
 
@@ -74,3 +74,5 @@ export const criarItem = (newItemData, userRole) => {
   // Retorna o Item Criado
   return item;
 };
+
+export { inventory };
