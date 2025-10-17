@@ -29,7 +29,7 @@ const inventory = [
     category: "Áudio",
     quantity: 8,
     value: "129.99",
-    editableBy: ["admin", "marina"],
+    editableBy: ["admin", "izidio"],
     isDeleted: false,
     createdAt: new Date("2025-10-05T09:15:00Z"),
     updatedAt: new Date("2025-10-05T09:15:00Z"),
@@ -43,6 +43,7 @@ const generateId = () => {
   return newId;
 }
 
+//  Função de Criar Item
 export const criarItem = (newItemData, userRole) => {
   // Valida as Permissões
   if (userRole !== 'admin') {
@@ -65,7 +66,7 @@ export const criarItem = (newItemData, userRole) => {
     isDeleted: false,
     createdAt: new Date(),
     updatedAt: new Date(),
-    editLogEncrypted: "mocked-log-data-temp"
+    editLogEncrypted: "mocked-log-data-temp",
   };
 
   // Adiciona ao Inventário
@@ -74,5 +75,27 @@ export const criarItem = (newItemData, userRole) => {
   // Retorna o Item Criado
   return item;
 };
+
+//  Função de Ler item
+export const lerItem = (id, userRole) => {
+  const item = inventory.find (i => i.id === id); // Busca o Item pelo Id
+    
+  if (!item) {
+    throw new Error ("Item não encontrado ou Inexistente!") // Valida se o Item existe
+  };
+    
+  if (!item.editableBy.includes(userRole)) {
+    throw new Error ("Permissão negada para visualizar item.") // Valida quem pode vizualizar o Item
+  };
+
+  const status = item.isDeleted ? "inativo" : "ativo"; // Adicionei uma variáevel para mostrar o status do Item
+
+  return{
+    ...item,
+    status,
+  }
+}
+
+
 
 export { inventory };
