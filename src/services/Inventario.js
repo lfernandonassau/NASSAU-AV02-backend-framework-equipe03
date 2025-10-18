@@ -37,6 +37,7 @@ const inventory = [
   }
 ];
 
+//cade o comentario nessa desgraça
 let nextId = inventory.length + 1;
 const generateId = () => {
   const newId = `${String(nextId++).padStart(3, '0')}`;
