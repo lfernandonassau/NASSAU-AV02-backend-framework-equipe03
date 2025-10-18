@@ -22,6 +22,36 @@ const postFunction = (req, res) => {
     })
 }
 
+// --- FUNÇÕES MOCK PARA CRUD DE ITENS #PAULISTA
+const listItems = (req, res) => {
+    res.json([{ id: 1, name: "Item de teste" }]);
+};
+
+const createItem = (req, res) => {
+    const data = req.body;
+    const item = services.criarItem(data);
+    res.json(item);
+};
+
+const getItemById = (req, res) => {
+    const { id } = req.params;
+    const item = services.lerItem(id);
+    res.json(item);
+};
+
+const updateItem = (req, res) => {
+    res.json({ message: `Item ${req.params.id} atualizado (mock)` });
+};
+
+const deleteItem = (req, res) => {
+    res.json({ message: `Item ${req.params.id} deletado (mock)` });
+};
+
+const moveItem = (req, res) => {
+    res.json({ message: `Item ${req.params.id} movido (mock)` });
+}
+
+
 const requestValidator = (req, res) => {
     // Checa se o pedido foi enviado em formato JSON
     if (req.is('json') === false){
@@ -55,6 +85,12 @@ const requestValidator = (req, res) => {
 module.exports = {
     best_test_request,
     postFunction,
+    listItems,
+    createItem,
+    getItemById,
+    updateItem,
+    deleteItem,
+    moveItem
 };
 
 // Função temporária enquanto o Paulista não faz os serviços

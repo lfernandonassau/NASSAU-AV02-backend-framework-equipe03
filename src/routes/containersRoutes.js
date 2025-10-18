@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 // --- Ponto de Atenção 1: Importar o Controller de Containers Real ---
-const containersController = require('../controllers/containersController');
+//const containersController = require('../controllers/containersController');
 
 const containersController = {
     // Funções do Container

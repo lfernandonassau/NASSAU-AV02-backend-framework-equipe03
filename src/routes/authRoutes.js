@@ -2,20 +2,39 @@
 
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middlewares/auth'); // Para manipular loggedUsers
+const loggedUsers = authMiddleware.loggedUsers;
 
 // --- Ponto de Atenção 1: Importar o Controller de Autenticação Real ---
 // Substitua o mock pelo import real assim que o Controller for criado.
 // Exemplo: const authController = require('../controllers/authController');
 const authController = { 
-    login: (req, res) => res.json({ message: "Rota: POST /api/auth/login - Pronto para Login" }),
-    logout: (req, res) => res.json({ message: "Rota: POST /api/auth/logout - Pronto para Logout" }),
-    status: (req, res) => res.json({ message: "Rota: GET /api/auth/status - Pronto para checar Status" }),
-    // ... Aqui iriam outras funções como 'register' ou 'forgotPassword' se fossem necessárias.
+    login: (req, res) => {
+        const { username, password } = req.body;
+        if(username === 'admin' && password === 'admin'){
+            const token = "token-admin"; // Mock de token
+            loggedUsers.add(token);
+            return res.json({ message: "Login bem-sucedido", token });
+        } else {
+            return res.status(401).json({ error: "Usuário ou senha inválidos" });
+        }
+    },
+    logout: (req, res) => {
+        const token = req.headers['authorization'];
+        if(token && loggedUsers.has(token)){
+            loggedUsers.delete(token);
+            return res.json({ message: "Logout realizado com sucesso" });
+        }
+        return res.status(400).json({ error: "Token inválido ou usuário não logado" });
+    },
+    status: (req, res) => {
+        const token = req.headers['authorization'];
+        if(token && loggedUsers.has(token)){
+            return res.json({ message: "Usuário logado" });
+        }
+        return res.status(401).json({ error: "Usuário não logado" });
+    }
 };
-
-// --- Ponto de Atenção 2: Adicionar um Middleware de Autenticação (Futuro) ---
-// Em rotas que exigem login (como 'status'), você adicionará um middleware aqui.
-// Exemplo: router.get('/status', authMiddleware, authController.status);
 
 // =================================================================
 // ROTAS DE AUTENTICAÇÃO (/api/auth)
