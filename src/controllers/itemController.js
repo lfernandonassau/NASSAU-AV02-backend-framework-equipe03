@@ -99,4 +99,3 @@ const getItemMetadata = (id, arg1, arg2, query) => {
 }
 
 // OBS: eu REALMENTE preciso das rotas e dos serviços pra fazer toda a integração desse sistema de forma fiel
-//captado
