@@ -5,12 +5,13 @@ const app = express(); //criando a aplicação (instância)
 const logger = require('./middlewares/logger'); //middleware para logar todas as requisições #CT
 const auth = require('./middlewares/auth'); //middleware global de autenticação #CT
 const segurarErros = require('./middlewares/segurarErros'); //middleware de captura de erros #CT
-//endregion
+//
 
 //CONFIGURAÇÕES GLOBAIS DO APP
 app.use(express.json()); //habilitando o express para receber json
 app.use(logger); // loga todas as requisições usando o middleware de logger #CT
 app.use(auth); // autenticação global usando o middleware de auth #CT
+
 
 // =================================================================
 // ROTAS DA API

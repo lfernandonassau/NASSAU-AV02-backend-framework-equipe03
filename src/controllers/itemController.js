@@ -1,3 +1,6 @@
+//Arquivo: src/controllers/itemController.js
+//Autoria do CT
+
 const { get } = require('mongoose');
 const services = require('../services/nome'); // Import dos serviços que estão pra ser implementados
 
