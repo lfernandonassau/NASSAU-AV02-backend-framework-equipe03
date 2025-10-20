@@ -1,10 +1,65 @@
-const services = require('../services/nome'); // Import dos serviços que estão pra ser implementados
+// Autoria do Richard - comentários sem minha assinatura implicitamente são meus
+// Arquivo servindo como controlador para o endpoint do serviço de itens
 
+const services = require('../services/Inventario'); // Import do serviço de itens (a nomenclatura desse projeto tá estranha, tem como a gente escrever tudo em inglês?)
+const { loggedUsers } = require('../middlewares/auth');
+const users = loggedUsers.loggedUsers // Import da coleção de tokens válidos/usuários logados
 
 const best_test_request = (req, res) => {
     res.json({"message": "you have been returned with the bestest testest requestest"})
 };
 
+// Cria um item
+const createItem = (req, res) => {
+    const { name } = req.body
+    const { category } = req.body
+    const { quantity } = req.body
+    const { editableBy } = req.body
+    const { value } = req.body
+    const item = {name, category, quantity, editableBy, value}
+    const token = req.get("Authorization")  // URGENT: Os serviços precisam validar o editableBy baseado no set loggedUsers;
+    let fake_token = 'admin'                // Até lá, eu vou usar essa variável provisória
+
+    const new_item = services.criarItem(item, fake_token) // substituir segundo argumento por token quando o problema for resolvido
+    res.status(200).send(new_item)
+}
+
+// Seleciona um item pelo ID
+const getItemById = (req, res) => {
+    const { id } = req.params
+    const token = req.get("Authorization")
+    let fake_token = 'admin'
+
+    const item = services.lerItem(id, fake_token) 
+
+    res.status(200).send(item)
+}
+
+// Lista os itens; opcionalmente filtrados por parâmetros de query
+const listItems = (req, res) => {
+    const filter = req.query
+
+    console.log(filter)
+    // Necessita de uma função dos serviços; Retorna um bule de chá enquanto isso
+    res.status(418).send('You found a TEAPOT! It was not added to your inventory.')
+}
+
+const updateItem = (req, res) => {
+    // Necessita de uma função dos serviços; Retorna um bule de chá azul enquanto isso
+    res.status(418).send('You found a BLUE TEAPOT! It was not added to your inventory.')
+}
+
+const deleteItem = (req, res) => {
+    // Necessita de uma função dos serviços; Retorna um bule de chá escarlate enquanto isso
+    res.status(418).send('You found a SCARLET TEAPOT! It was not added to your inventory.')
+}
+
+const moveItem = (req, res) => {
+    // Necessita de uma função dos serviços; Retorna um bule de chá de duas pernas enquanto isso
+    res.status(418).send('You found a 2-LEGGED TEAPOT! It was not added to your inventory.')
+}
+
+// Essa função pode ser descartada futuramente
 const postFunction = (req, res) => {
     const { id } = req.params;
     const { panty } = req.body; // Nome de variável provisório
@@ -21,36 +76,7 @@ const postFunction = (req, res) => {
     })
 }
 
-// --- FUNÇÕES MOCK PARA CRUD DE ITENS #PAULISTA
-const listItems = (req, res) => {
-    res.json([{ id: 1, name: "Item de teste" }]);
-};
-
-const createItem = (req, res) => {
-    const data = req.body;
-    const item = services.criarItem(data);
-    res.json(item);
-};
-
-const getItemById = (req, res) => {
-    const { id } = req.params;
-    const item = services.lerItem(id);
-    res.json(item);
-};
-
-const updateItem = (req, res) => {
-    res.json({ message: `Item ${req.params.id} atualizado (mock)` });
-};
-
-const deleteItem = (req, res) => {
-    res.json({ message: `Item ${req.params.id} deletado (mock)` });
-};
-
-const moveItem = (req, res) => {
-    res.json({ message: `Item ${req.params.id} movido (mock)` });
-}
-
-
+// Valida os dados do request - retorna true se nenhum problema for detectado; responde com o problema caso contrário.
 const requestValidator = (req, res) => {
     // Checa se o pedido foi enviado em formato JSON
     if (req.is('json') === false){
@@ -60,8 +86,8 @@ const requestValidator = (req, res) => {
 
     // Checa se a quantidade de chaves dentro do request em JSON está correta; Quantidade final ainda não definida
     if (Object.keys(req.body).length !== 2){
-        let amount = Object.keys(req.body).length
-        if (amount < 2){
+        let amount
+        if (Object.keys(req.body).length < 2){
             amount = "few"
         } else {
             amount = "many"
@@ -82,20 +108,13 @@ const requestValidator = (req, res) => {
 };
 
 module.exports = {
-    best_test_request,
-    postFunction,
     listItems,
     createItem,
     getItemById,
     updateItem,
     deleteItem,
-    moveItem
+    moveItem,
+    best_test_request
 };
 
-// Função temporária enquanto o Paulista não faz os serviços
-
-const getItemMetadata = (id, arg1, arg2, query) => {
-    console.log("Request successfully received with:", id, arg1, arg2, query)
-}
-
-// OBS: eu REALMENTE preciso das rotas e dos serviços pra fazer toda a integração desse sistema de forma fiel
+// código carece da implementação completa dos serviços para ser finalizado
