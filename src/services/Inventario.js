@@ -1,3 +1,4 @@
+// Autoria de Paulista
 const inventory = [
   {
     id: "001",
@@ -36,7 +37,9 @@ const inventory = [
     editLogEncrypted: "mocked-log-data-3",
   }
 ];
+// Funções presentes no Mock: Criar Item, Ler Item, Editar Item, Deletar Item (soft delete), Mover Item.
 
+//Método de auto incremento de um id (sempre que um item for criado, o novo item vai receber id+1)
 let nextId = inventory.length + 1;
 const generateId = () => {
   const newId = `${String(nextId++).padStart(3, '0')}`;
@@ -50,7 +53,7 @@ export const criarItem = (newItemData, userRole) => {
     throw new Error("Permissão negada. Apenas 'admin' pode criar.");
   }
 
-  // 2. Validação de Dados Obrigatórios
+  // Validação de Dados Obrigatórios
   if (!newItemData.name || !newItemData.value) {
     throw new Error("Nome e valor são obrigatórios.");
   }
@@ -85,7 +88,7 @@ export const lerItem = (id, userRole) => {
   };
     
   if (!item.editableBy.includes(userRole)) {
-    throw new Error ("Permissão negada para visualizar item.") // Valida quem pode vizualizar o Item
+    throw new Error ("Permissão negada para visualizar item.") // Valida quem pode visualizar o Item
   };
 
   const status = item.isDeleted ? "inativo" : "ativo"; // Adicionei uma variáevel para mostrar o status do Item
@@ -96,6 +99,29 @@ export const lerItem = (id, userRole) => {
   }
 }
 
+// Função de Editar Item
+export const editarItem = (id, updates, userRole) => {
+  const item = inventory.find(i => i.id === id);// Busca o Item pelo Id
+  if (!item) {
+    throw new Error("Item não encontrado ou inexistente."); //Verifica se o item existe
+  }
+
+  if (!item.editableBy.includes(userRole)) {
+    throw new Error("Permissão negada para editar este item."); //Verifica se o usuário tem permissão para editar
+  }
+
+  const camposEditaveis = ["name", "category", "quantity", "value"]; // Atualiza os campos permitidos
+  for (const key of Object.keys(updates)) { 
+    if (camposEditaveis.includes(key)) { 
+      item[key] = updates[key]; // Aplica as atualizações permitidas
+    }
+  }
+
+  item.updatedAt = new Date(); // Atualiza a data de modificação
+  item.editLogEncrypted = `mocked-edit-log-${Date.now()}`; // Atualiza o log de edição
+
+  return item; //retorna o item atualizado
+};
 
 
 export { inventory };
