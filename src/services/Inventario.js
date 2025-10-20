@@ -39,6 +39,8 @@ const inventory = [
 ];
 // Funções presentes no Mock: Criar Item, Ler Item, Editar Item, Deletar Item (soft delete), Mover Item.
 
+//cade o comentario nessa desgraça
+
 //Método de auto incremento de um id (sempre que um item for criado, o novo item vai receber id+1)
 let nextId = inventory.length + 1;
 const generateId = () => {
