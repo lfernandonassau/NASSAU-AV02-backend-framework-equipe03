@@ -2,7 +2,8 @@
 //Autoria do CT
 
 const { get } = require('mongoose');
-const services = require('../services/nome'); // Import dos serviços que estão pra ser implementados
+//importando os métodos genéricos do Firebase (substituindo services antigos)
+const { create, read, update, remove, moveDrawer } = require('../services/firebase'); // #CT
 
 
 const best_test_request = (req, res) => {
@@ -26,32 +27,65 @@ const postFunction = (req, res) => {
 }
 
 // --- FUNÇÕES MOCK PARA CRUD DE ITENS #PAULISTA
-const listItems = (req, res) => {
-    res.json([{ id: 1, name: "Item de teste" }]);
+const listItems = async (req, res) => {
+    try {
+        const data = await read('itens'); //lendo todos os itens da coleção "itens"
+        res.json(data || []);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 };
 
-const createItem = (req, res) => {
-    const data = req.body;
-    const item = services.criarItem(data);
-    res.json(item);
+const createItem = async (req, res) => {
+    try {
+        const data = req.body;
+        const item = await create('itens', data); //criando item no banco
+        res.json(item);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 };
 
-const getItemById = (req, res) => {
-    const { id } = req.params;
-    const item = services.lerItem(id);
-    res.json(item);
+const getItemById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const item = await read(`itens/${id}`); //lendo item específico
+        if (!item) return res.status(404).json({ erro: 'Item não encontrado' });
+        res.json(item);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 };
 
-const updateItem = (req, res) => {
-    res.json({ message: `Item ${req.params.id} atualizado (mock)` });
+const updateItem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+        await update(`itens/${id}`, data); //atualizando item no banco
+        res.json({ message: `Item ${id} atualizado com sucesso!` });
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 };
 
-const deleteItem = (req, res) => {
-    res.json({ message: `Item ${req.params.id} deletado (mock)` });
+const deleteItem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await remove(`itens/${id}`); //removendo item do banco
+        res.json({ message: `Item ${id} deletado com sucesso!` });
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 };
 
-const moveItem = (req, res) => {
-    res.json({ message: `Item ${req.params.id} movido (mock)` });
+const moveItem = async (req, res) => {
+    try {
+        const { from, to, camada } = req.body; //caminhos passados no body
+        const result = await moveDrawer(from, to, camada || 0); //movendo item entre coleções
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 }
 
 

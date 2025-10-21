@@ -1,4 +1,6 @@
 // src/routes/authRoutes.js
+//Autoria do IZIDIO
+
 
 const express = require('express');
 const router = express.Router();
@@ -42,7 +44,10 @@ const authController = {
 
 // [POST] /api/auth/login
 // Objetivo: Autenticar o usuário.
+//Implementado por pedro izidio
 router.post('/login', authController.login);
+
+
 
 // [POST] /api/auth/logout
 // Objetivo: Finalizar a sessão/invalidar o token.
