@@ -3,13 +3,13 @@ const path = require('path'); // resolver caminhos de arquivos
 
 const serviceAccount = require(path.join(__dirname, './config/itemtity_firebase.json'));
 
-admin.initializeApp({
+// Inicializa o Firebase e guarda a instância em `app`
+const app = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://itemtify-475819-default-rtdb.firebaseio.com/"
 });
 
 const db = admin.database(); // referência principal do banco
-
 
 // CRUD genérico
 async function create(path, data) {
@@ -79,11 +79,12 @@ async function moveDrawer(from, to, camada = 0) {
     }
 }
 
-//export
+// Export corrigido, incluindo `app` para permitir encerrar a conexão
 module.exports = {
     admin,
+    app,
     db,
-    create,
+    create, //CRUD ABAIXO
     read,
     update,
     remove,
