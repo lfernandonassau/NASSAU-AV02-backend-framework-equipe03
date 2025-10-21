@@ -45,3 +45,6 @@ Thumbs.db
 # Build folders
 dist/
 build/
+
+# Credential files
+src/services/config/itemtity_firebase.json
