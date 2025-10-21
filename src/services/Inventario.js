@@ -126,5 +126,27 @@ export const editarItem = (id, updates, userRole) => {
   return item; //retorna o item atualizado
 };
 
+// Função de Deletar Item (soft delete)
+export const deletarItem = (id, userRole) => {
+  const item = inventory.find(i => i.id === id);  // Busca o Item pelo Id
+  if (!item) {
+    throw new Error("Item não encontrado ou inexistente."); //Verifica se o item existe
+  };
 
+  if (!item.editableBy.includes(userRole)) {
+    throw new Error("Permissão negada para deletar este item."); //Verifica se o usuário tem permissão para deletar
+  }
+  if (item.isDeleted) {
+    throw new Error("Item já está deletado."); //Verifica se o item já está deletado
+  };
+  item.isDeleted = true; // Marca o item como deletado
+  item.updatedAt = new Date(); // Atualiza a data de modificação
+  item.editLogEncrypted = `mocked-delete-log-${Date.now()}`; // Atualiza o log de edição
+  
+  return {
+  message: `Item "${item.name}" (ID: ${id}) foi marcado como inativo .`,
+  item,
+};
+
+};
 export { inventory };
