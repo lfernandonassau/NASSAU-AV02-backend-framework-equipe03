@@ -146,7 +146,33 @@ export const deletarItem = (id, userRole) => {
   return {
   message: `Item "${item.name}" (ID: ${id}) foi marcado como inativo .`,
   item,
+  };
 };
 
+  // Função de Mover Item (alterar categoria)
+export const moverItem = (id, novaCategoria, userRole) => {
+  
+  const item = inventory.find(i => i.id === id);// Busca o item pelo Id
+
+  if (!item) {
+    throw new Error("Item não encontrado ou inexistente."); //Verifica se o item existe
+  };
+
+  if (!item.editableBy.includes(userRole)) {
+    throw new Error("Permissão negada para mover este item."); //Verifica a permissão
+  }
+
+  if (item.isDeleted) {
+    throw new Error("Não é possível mover um item inativo."); //Verifica se o item ta ativo ou inativo
+  }
 };
+item.category = novaCategoria
+item.updatedAt = new Date ();
+item.editLogEncrypted = `mocked-move-log-${Date.now()}`; // simula um log de alteração
+
+return {
+    message: `Item "${item.name}" (ID: ${id}) movido para a categoria "${novaCategoria}".`,
+    item,
+  };
+
 export { inventory };
