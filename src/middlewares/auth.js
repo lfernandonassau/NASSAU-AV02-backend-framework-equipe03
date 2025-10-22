@@ -14,6 +14,7 @@ module.exports = (req, res, next) => {
 
   // Token válido
   next();
+  
 };
 
 // Export para manipulação do login

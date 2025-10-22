@@ -1,7 +1,9 @@
 // Autoria do Richard - comentários sem minha assinatura implicitamente são meus
 // Arquivo servindo como controlador para o endpoint do serviço de itens
 
-const services = require('../services/Inventario'); // Import do serviço de itens (a nomenclatura desse projeto tá estranha, tem como a gente escrever tudo em inglês?)
+//importando os métodos genéricos do Firebase (substituindo services antigos) #CT
+const { create, read, update, remove, moveDrawer } = require('../services/firebase'); // #CT
+const services = require('../services/Inventario'); // Import dos serviços de itens
 const { loggedUsers } = require('../middlewares/auth');
 const users = loggedUsers.loggedUsers // Import da coleção de tokens válidos/usuários logados
 
@@ -76,7 +78,69 @@ const postFunction = (req, res) => {
     })
 }
 
-// Valida os dados do request - retorna true se nenhum problema for detectado; responde com o problema caso contrário.
+/* // --- FUNÇÕES MOCK PARA CRUD DE ITENS #PAULISTA
+const listItems = async (req, res) => {
+    try {
+        const data = await read('itens'); //lendo todos os itens da coleção "itens"
+        res.json(data || []);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+};
+
+const createItem = async (req, res) => {
+    try {
+        const data = req.body;
+        const item = await create('itens', data); //criando item no banco
+        res.json(item);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+};
+
+const getItemById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const item = await read(`itens/${id}`); //lendo item específico
+        if (!item) return res.status(404).json({ erro: 'Item não encontrado' });
+        res.json(item);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+};
+
+const updateItem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+        await update(`itens/${id}`, data); //atualizando item no banco
+        res.json({ message: `Item ${id} atualizado com sucesso!` });
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+};
+
+const deleteItem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await remove(`itens/${id}`); //removendo item do banco
+        res.json({ message: `Item ${id} deletado com sucesso!` });
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+};
+
+const moveItem = async (req, res) => {
+    try {
+        const { from, to, camada } = req.body; //caminhos passados no body
+        const result = await moveDrawer(from, to, camada || 0); //movendo item entre coleções
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+} */
+
+
 const requestValidator = (req, res) => {
     // Checa se o pedido foi enviado em formato JSON
     if (req.is('json') === false){
