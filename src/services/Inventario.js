@@ -50,7 +50,7 @@ const generateId = () => {
 }
 
 //  Função de Criar Item
-export const criarItem = (newItemData, userRole) => {
+const criarItem = (newItemData, userRole) => {
   // Valida as Permissões
   if (userRole !== 'admin') {
     throw new Error("Permissão negada. Apenas 'admin' pode criar.");
@@ -83,7 +83,7 @@ export const criarItem = (newItemData, userRole) => {
 };
 
 //  Função de Ler item
-export const lerItem = (id, userRole) => {
+const lerItem = (id, userRole) => {
   const item = inventory.find (i => i.id === id); // Busca o Item pelo Id
     
   if (!item) {
@@ -103,7 +103,7 @@ export const lerItem = (id, userRole) => {
 }
 
 // Função de Editar Item
-export const editarItem = (id, updates, userRole) => {
+const editarItem = (id, updates, userRole) => {
   const item = inventory.find(i => i.id === id);// Busca o Item pelo Id
   if (!item) {
     throw new Error("Item não encontrado ou inexistente."); //Verifica se o item existe
@@ -127,7 +127,7 @@ export const editarItem = (id, updates, userRole) => {
 };
 
 // Função de Deletar Item (soft delete)
-export const deletarItem = (id, userRole) => {
+const deletarItem = (id, userRole) => {
   const item = inventory.find(i => i.id === id);  // Busca o Item pelo Id
   if (!item) {
     throw new Error("Item não encontrado ou inexistente."); //Verifica se o item existe
@@ -150,7 +150,7 @@ export const deletarItem = (id, userRole) => {
 };
 
   // Função de Mover Item (alterar categoria)
-export const moverItem = (id, novaCategoria, userRole) => {
+const moverItem = (id, novaCategoria, userRole) => {
   // Busca o item pelo Id
   const item = inventory.find(i => i.id === id);
 
@@ -176,4 +176,21 @@ export const moverItem = (id, novaCategoria, userRole) => {
     item,
   };
 }; 
-export { inventory };
+// Função de Listar Itens
+const listarItens = (userRole) => {
+  // Filtra os itens que o usuário pode visualizar
+  const itensVisiveis = inventory.filter(item => item.editableBy.includes(userRole) && !item.isDeleted); //Mostra apenas itens ativos
+
+  return itensVisiveis;
+};
+
+module.exports = {
+  criarItem,
+  lerItem,
+  editarItem,
+  deletarItem,
+  moverItem,
+  listarItens,
+  inventory,
+};
+
