@@ -11,11 +11,6 @@ export const listarUsuarios = async (req, res) => {
   }
 }
 
-// Buscar usuario por ID
-export const buscarUsuarioPorId = async (req, res) => {
-
-}
-
 // criar usuario
 export const criarUsuario = async (req, res) => {
   const { nome, email } = req.body
@@ -33,11 +28,19 @@ export const criarUsuario = async (req, res) => {
   }
 }
 
+// TODO: APENAS EXEMPLO, NECESSARIO PREENCHER E IMPLEMENTAR
+// Buscar usuario por ID
+export const buscarUsuarioPorId = async (req, res) => {
+
+}
+
+// TODO: APENAS EXEMPLO, NECESSARIO PREENCHER E IMPLEMENTAR
 // Atualizar usuario
 export const atualizarUsuario = async (req, res) => {
 
 }
 
+// TODO: APENAS EXEMPLO, NECESSARIO PREENCHER E IMPLEMENTAR
 // Deletar usuario
 export const deletarUsuario = async (req, res) => {
 

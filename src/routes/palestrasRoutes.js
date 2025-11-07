@@ -19,4 +19,5 @@ router.get('/:id', buscarPalestraPorId)   // /palestras/:id → busca por ID
 router.post('/', criarPalestra)           // /palestras → cria palestra
 router.put('/:id', atualizarPalestra)     // /palestras/:id → atualiza palestra
 router.delete('/:id', excluirPalestra)    // /palestras/:id → exclui palestra
+
 export default router
