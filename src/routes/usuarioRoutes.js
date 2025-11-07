@@ -1,10 +1,23 @@
+// src/routes/usuarioRoutes.js
+// RESPONSÁVEL: izidio
+// Rotas relacionadas aos usuários
+
 import express from 'express';
-import { listarUsuarios, criarUsuario } from '../controllers/usuarioController.js';
+import { 
+  listarUsuarios, 
+  criarUsuario, 
+  atualizarUsuario, 
+  deletarUsuario,
+  buscarUsuarioPorId
+} from '../controllers/usuarioController.js';
 
 const router = express.Router();
 
-// rotas de exemplo
-router.get('/', listarUsuarios);
-router.post('/', criarUsuario);
+// CRUD Usuário 
+router.get('/', listarUsuarios);          // /Usuarios → lista todas
+router.get('/:id', buscarUsuarioPorId);   // /Usuarios/:id → busca por ID
+router.post('/', criarUsuario);           // /Usuarios → cria Usuarios
+router.put('/:id', atualizarUsuario);     // /Usuarios/:id → atualiza Usuarios
+router.delete('/:id', deletarUsuario);    // /Usuarios/:id → exclui Usuarios
 
 export default router;
