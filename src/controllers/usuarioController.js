@@ -11,6 +11,11 @@ export const listarUsuarios = async (req, res) => {
   }
 }
 
+// Buscar usuario por ID
+export const buscarUsuarioPorId = async (req, res) => {
+
+}
+
 // criar usuario
 export const criarUsuario = async (req, res) => {
   const { nome, email } = req.body
@@ -26,4 +31,14 @@ export const criarUsuario = async (req, res) => {
     console.error('erro ao criar usuario:', err.message)
     res.status(500).json({ error: 'erro ao criar usuario' })
   }
+}
+
+// Atualizar usuario
+export const atualizarUsuario = async (req, res) => {
+
+}
+
+// Deletar usuario
+export const deletarUsuario = async (req, res) => {
+
 }
