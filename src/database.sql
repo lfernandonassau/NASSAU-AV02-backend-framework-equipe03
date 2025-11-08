@@ -1,98 +1,110 @@
 -- Armazena os usuários do sistema (participantes e organizadores)
-CREATE TABLE Usuario (
-    id_usuario INT PRIMARY KEY,
+CREATE TABLE usuario (
+    id_usuario SERIAL PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
-    senha VARCHAR(200) NOT NULL,
-    tipo ENUM('organizador', 'participante') NOT NULL
+    senha TEXT NOT NULL,
+    tipo TEXT NOT NULL CHECK (tipo IN ('organizador', 'participante'))
 );
 
--- Guarda informações dos locais onde os eventos acontecem
-CREATE TABLE Local (
-    id_local INT PRIMARY KEY,
+-- Guarda os locais onde os eventos acontecem
+CREATE TABLE local (
+    id_local SERIAL PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     endereco VARCHAR(255),
     capacidade INT
 );
 
--- Classifica os eventos por tema ou área
-CREATE TABLE Categoria (
-    id_categoria INT PRIMARY KEY,
+-- Categorias para os eventos
+CREATE TABLE categoria (
+    id_categoria SERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     descricao TEXT
 );
 
--- Representa os eventos cadastrados no sistema
-CREATE TABLE Evento (
-    id_evento INT PRIMARY KEY,
+-- Eventos cadastrados no sistema
+CREATE TABLE evento (
+    id_evento SERIAL PRIMARY KEY,
     titulo VARCHAR(200) NOT NULL,
     descricao TEXT,
     data_inicio DATE NOT NULL,
     data_fim DATE NOT NULL,
     id_local INT NOT NULL,
     id_categoria INT NOT NULL,
-    FOREIGN KEY (id_local) REFERENCES Local(id_local),
-    FOREIGN KEY (id_categoria) REFERENCES Categoria(id_categoria)
+    CONSTRAINT fk_evento_local FOREIGN KEY (id_local) REFERENCES local(id_local) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_evento_categoria FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Registra informações sobre os palestrantes convidados
-CREATE TABLE Palestrante (
-    id_palestrante INT PRIMARY KEY,
+-- Palestrantes convidados
+CREATE TABLE palestrante (
+    id_palestrante SERIAL PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     bio TEXT,
     email VARCHAR(150),
     telefone VARCHAR(20)
 );
 
--- Representa as palestras que acontecem dentro de um evento
-CREATE TABLE Palestra (
-    id_palestra INT PRIMARY KEY,
+-- Palestras dentro dos eventos
+CREATE TABLE palestra (
+    id_palestra SERIAL PRIMARY KEY,
     titulo VARCHAR(200) NOT NULL,
     descricao TEXT,
-    data_hora DATETIME NOT NULL,
+    data_hora TIMESTAMP WITH TIME ZONE NOT NULL,
     id_evento INT NOT NULL,
     id_palestrante INT,
-    FOREIGN KEY (id_evento) REFERENCES Evento(id_evento),
-    FOREIGN KEY (id_palestrante) REFERENCES Palestrante(id_palestrante)
+    CONSTRAINT fk_palestra_evento FOREIGN KEY (id_evento) REFERENCES evento(id_evento) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_palestra_palestrante FOREIGN KEY (id_palestrante) REFERENCES palestrante(id_palestrante) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
--- Registra a participação de um usuário em um evento
-CREATE TABLE Inscricao (
-    id_inscricao INT PRIMARY KEY,
+-- Inscrição de usuário no evento
+CREATE TABLE inscricao (
+    id_inscricao SERIAL PRIMARY KEY,
     id_usuario INT NOT NULL,
     id_evento INT NOT NULL,
-    data_inscricao DATETIME NOT NULL,
-    status ENUM('pendente', 'confirmada', 'cancelada') NOT NULL,
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
-    FOREIGN KEY (id_evento) REFERENCES Evento(id_evento)
+    data_inscricao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL CHECK (status IN ('pendente', 'confirmada', 'cancelada')),
+    CONSTRAINT fk_inscricao_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_inscricao_evento FOREIGN KEY (id_evento) REFERENCES evento(id_evento) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Emite certificados para inscrições concluídas
-CREATE TABLE Certificado (
-    id_certificado INT PRIMARY KEY,
+-- Certificados emitidos para inscrições concluídas
+CREATE TABLE certificado (
+    id_certificado SERIAL PRIMARY KEY,
     id_inscricao INT NOT NULL,
     codigo VARCHAR(50) UNIQUE NOT NULL,
-    data_emissao DATE NOT NULL,
-    FOREIGN KEY (id_inscricao) REFERENCES Inscricao(id_inscricao)
+    data_emissao DATE NOT NULL DEFAULT CURRENT_DATE,
+    CONSTRAINT fk_certificado_inscricao FOREIGN KEY (id_inscricao) REFERENCES inscricao(id_inscricao) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Guarda notas e comentários feitos pelos usuários sobre as palestras
-CREATE TABLE Avaliacao (
-    id_avaliacao INT PRIMARY KEY,
+-- Avaliações das palestras
+CREATE TABLE avaliacao (
+    id_avaliacao SERIAL PRIMARY KEY,
     id_palestra INT NOT NULL,
     id_usuario INT NOT NULL,
-    nota INT CHECK (nota BETWEEN 1 AND 5),
+    nota INT NOT NULL CHECK (nota BETWEEN 1 AND 5),
     comentario TEXT,
-    FOREIGN KEY (id_palestra) REFERENCES Palestra(id_palestra),
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
+    CONSTRAINT fk_avaliacao_palestra FOREIGN KEY (id_palestra) REFERENCES palestra(id_palestra) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_avaliacao_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT uniq_avaliacao_usuario_palestra UNIQUE (id_palestra, id_usuario)
 );
 
--- Armazena informações sobre os pagamentos das inscrições
-CREATE TABLE Pagamento (
-    id_pagamento INT PRIMARY KEY,
+-- Pagamentos das inscrições
+CREATE TABLE pagamento (
+    id_pagamento SERIAL PRIMARY KEY,
     id_inscricao INT NOT NULL,
-    valor DECIMAL(10,2) NOT NULL,
-    status ENUM('pendente', 'pago', 'reembolsado') NOT NULL,
-    data_pagamento DATETIME,
-    FOREIGN KEY (id_inscricao) REFERENCES Inscricao(id_inscricao)
+    valor NUMERIC(10,2) NOT NULL CHECK (valor >= 0),
+    status TEXT NOT NULL CHECK (status IN ('pendente', 'pago', 'reembolsado')),
+    data_pagamento TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT fk_pagamento_inscricao FOREIGN KEY (id_inscricao) REFERENCES inscricao(id_inscricao) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- Índices recomendados para performance em joins/filtragens
+CREATE INDEX IF NOT EXISTS idx_evento_id_local ON evento (id_local);
+CREATE INDEX IF NOT EXISTS idx_evento_id_categoria ON evento (id_categoria);
+CREATE INDEX IF NOT EXISTS idx_palestra_id_evento ON palestra (id_evento);
+CREATE INDEX IF NOT EXISTS idx_palestra_id_palestrante ON palestra (id_palestrante);
+CREATE INDEX IF NOT EXISTS idx_inscricao_id_usuario ON inscricao (id_usuario);
+CREATE INDEX IF NOT EXISTS idx_inscricao_id_evento ON inscricao (id_evento);
+CREATE INDEX IF NOT EXISTS idx_certificado_id_inscricao ON certificado (id_inscricao);
+CREATE INDEX IF NOT EXISTS idx_avaliacao_palestra_usuario ON avaliacao (id_palestra, id_usuario);
+CREATE INDEX IF NOT EXISTS idx_pagamento_id_inscricao ON pagamento (id_inscricao);
