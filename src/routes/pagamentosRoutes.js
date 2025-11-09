@@ -10,14 +10,15 @@ import {
   atualizarPagamento,
   excluirPagamento
 } from '../controllers/pagamentoController.js'
+import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 // CRUD de Pagamentos
-router.get('/', listarPagamentos)           // /pagamentos → lista todos
-router.get('/:id', buscarPagamentoPorId)    // /pagamentos/:id → busca por ID
-router.post('/', criarPagamento)            // /pagamentos → cria pagamento
-router.put('/:id', atualizarPagamento)      // /pagamentos/:id → atualiza pagamento
-router.delete('/:id', excluirPagamento)     // /pagamentos/:id → exclui pagamento
+router.get('/', authMiddleware, listarPagamentos)           // /pagamentos → lista todos
+router.get('/:id', authMiddleware, buscarPagamentoPorId)    // /pagamentos/:id → busca por ID
+router.post('/', authMiddleware, criarPagamento)            // /pagamentos → cria pagamento
+router.put('/:id', authMiddleware, atualizarPagamento)      // /pagamentos/:id → atualiza pagamento
+router.delete('/:id', authMiddleware, excluirPagamento)     // /pagamentos/:id → exclui pagamento
 
 export default router
