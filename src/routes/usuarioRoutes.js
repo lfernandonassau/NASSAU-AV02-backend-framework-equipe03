@@ -3,7 +3,6 @@
 // Rotas relacionadas aos usuários
 
 import express from 'express';
-
 import { 
   listarUsuarios, 
   criarUsuario, 
