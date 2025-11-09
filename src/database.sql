@@ -3,7 +3,7 @@ CREATE TABLE usuario (
     id_usuario SERIAL PRIMARY KEY,
     nome VARCHAR(90) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
-    senha TEXT NOT NULL,
+    senha VARCHAR(90) NOT NULL,
     tipo TEXT NOT NULL CHECK (tipo IN ('organizador', 'participante'))
 );
 
