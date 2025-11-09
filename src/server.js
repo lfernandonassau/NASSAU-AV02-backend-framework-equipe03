@@ -5,7 +5,13 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
-import {categoriasRoutes, eventosRoutes, inscricoesRoutes, locaisRoutes, pagamentosRoutes, palestrasRoutes, usuarioRoutes} from './routes'
+import categoriasRoutes from './routes/categoriasRoutes.js'
+import eventosRoutes from './routes/eventosRoutes.js'
+import inscricoesRoutes from './routes/inscricoesRoutes.js'
+import locaisRoutes from './routes/locaisRoutes.js'
+import pagamentosRoutes from './routes/pagamentosRoutes.js'
+import palestrasRoutes from './routes/palestrasRoutes.js'
+import usuarioRoutes from './routes/usuarioRoutes.js'
 import './config/db.js' // importa apenas para inicializar pool
 
 dotenv.config()
