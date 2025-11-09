@@ -1,7 +1,7 @@
 -- Armazena os usuários do sistema (participantes e organizadores)
 CREATE TABLE usuario (
     id_usuario SERIAL PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
+    nome VARCHAR(90) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     senha TEXT NOT NULL,
     tipo TEXT NOT NULL CHECK (tipo IN ('organizador', 'participante'))
