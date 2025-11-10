@@ -1,8 +1,16 @@
 // src/middleware/authMiddleware.js
 import jwt from 'jsonwebtoken'
 
+// Variável de controle (bypass)
+const FLIP_BYPASS = 0
+
 // Middleware para validar o token JWT
 export const authMiddleware = (req, res, next) => {
+  // Se o bypass estiver ativo, pula a autenticação
+  if (FLIP_BYPASS === 0) {
+    return next()
+  }
+
   // Espera que o token venha no cabeçalho: Authorization: Bearer <token>
   const authHeader = req.headers.authorization
 
