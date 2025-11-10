@@ -10,15 +10,14 @@ import {
   atualizarInscricao,
   excluirInscricao
 } from '../controllers/inscricaoController.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 // CRUD de Inscrições
-router.get('/', authMiddleware, listarInscricoes)            // /inscricoes → lista todas
-router.get('/:id', authMiddleware, buscarInscricaoPorId)     // /inscricoes/:id → busca por ID
+router.get('/', listarInscricoes)            // /inscricoes → lista todas
+router.get('/:id', buscarInscricaoPorId)     // /inscricoes/:id → busca por ID
 router.post('/', criarInscricao)                            // /inscricoes → cria inscrição
-router.put('/:id', authMiddleware, atualizarInscricao)       // /inscricoes/:id → atualiza inscrição
-router.delete('/:id', authMiddleware, excluirInscricao)      // /inscricoes/:id → exclui inscrição
+router.put('/:id', atualizarInscricao)       // /inscricoes/:id → atualiza inscrição
+router.delete('/:id', excluirInscricao)      // /inscricoes/:id → exclui inscrição
 
 export default router

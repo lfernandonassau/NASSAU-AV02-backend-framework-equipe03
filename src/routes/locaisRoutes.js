@@ -10,15 +10,14 @@ import {
   atualizarLocal,
   excluirLocal
 } from '../controllers/localController.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 // CRUD de Locais
-router.get('/', authMiddleware, listarLocais)           // /locais → lista todos
-router.get('/:id', authMiddleware, buscarLocalPorId)    // /locais/:id → busca por ID
-router.post('/', authMiddleware, criarLocal)            // /locais → cria local
-router.put('/:id', authMiddleware, atualizarLocal)      // /locais/:id → atualiza local
-router.delete('/:id', authMiddleware, excluirLocal)     // /locais/:id → exclui local
+router.get('/', listarLocais)           // /locais → lista todos
+router.get('/:id', buscarLocalPorId)    // /locais/:id → busca por ID
+router.post('/', criarLocal)            // /locais → cria local
+router.put('/:id', atualizarLocal)      // /locais/:id → atualiza local
+router.delete('/:id', excluirLocal)     // /locais/:id → exclui local
 
 export default router

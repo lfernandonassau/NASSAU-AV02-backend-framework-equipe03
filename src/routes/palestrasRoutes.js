@@ -10,15 +10,14 @@ import {
   atualizarPalestra,
   excluirPalestra
 } from '../controllers/palestraController.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 // CRUD de Palestras
-router.get('/', authMiddleware, listarPalestras)          // /palestras → lista todas
-router.get('/:id', authMiddleware, buscarPalestraPorId)   // /palestras/:id → busca por ID
-router.post('/', authMiddleware, criarPalestra)           // /palestras → cria palestra
-router.put('/:id', authMiddleware, atualizarPalestra)     // /palestras/:id → atualiza palestra
-router.delete('/:id', authMiddleware, excluirPalestra)    // /palestras/:id → exclui palestra
+router.get('/', listarPalestras)          // /palestras → lista todas
+router.get('/:id', buscarPalestraPorId)   // /palestras/:id → busca por ID
+router.post('/', criarPalestra)           // /palestras → cria palestra
+router.put('/:id', atualizarPalestra)     // /palestras/:id → atualiza palestra
+router.delete('/:id', excluirPalestra)    // /palestras/:id → exclui palestra
 
 export default router
