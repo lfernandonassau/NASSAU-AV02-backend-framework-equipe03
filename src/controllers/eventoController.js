@@ -4,20 +4,22 @@
 
 import { pool } from '../config/db.js'
 
-// Função auxiliar para buscar evento por ID (reutilizável)
+// 🧩 Função auxiliar para buscar evento por ID (reutilizável)
 const eventoIDQuery = async (id) => {
   let output = [] // [statusCode, body]
 
-  // Verifica se o ID é um número inteiro válido
-  if (typeof parseFloat(id) !== 'number' || !Number.isInteger(parseFloat(id))) {
+  if (isNaN(parseInt(id))) {
     output[0] = 400
     output[1] = { erro: 'O ID do evento deve ser um número inteiro.' }
     return output
   }
 
   try {
-    const query = `SELECT * FROM evento WHERE id_evento = ${'$id'}`
-    const result = await pool.query(query.replace('$id', '$1'), [id])
+    const query = `
+      SELECT * FROM evento
+      WHERE id_evento = ${id};
+    `
+    const result = await pool.query(query)
 
     if (result.rows.length < 1) {
       output[0] = 404
@@ -39,13 +41,14 @@ const eventoIDQuery = async (id) => {
 // 📋 Listar todos os eventos
 export const listarEventos = async (req, res) => {
   try {
-    const result = await pool.query(`
+    const query = `
       SELECT e.*, l.nome AS nome_local, c.nome AS nome_categoria
       FROM evento e
       JOIN local l ON e.id_local = l.id_local
       JOIN categoria c ON e.id_categoria = c.id_categoria
-      ORDER BY e.id_evento ASC
-    `)
+      ORDER BY e.id_evento ASC;
+    `
+    const result = await pool.query(query)
     res.status(200).json(result.rows)
   } catch (err) {
     console.error('Erro ao listar eventos:', err.message)
@@ -57,7 +60,6 @@ export const listarEventos = async (req, res) => {
 export const buscarEventoPorId = async (req, res) => {
   const { id } = req.params
   const evento = await eventoIDQuery(id)
-
   res.status(evento[0]).json(evento[1])
 }
 
@@ -65,7 +67,6 @@ export const buscarEventoPorId = async (req, res) => {
 export const criarEvento = async (req, res) => {
   const { titulo, descricao, data_inicio, data_fim, id_local, id_categoria } = req.body
 
-  // Verificação de campos obrigatórios
   if (!titulo || !data_inicio || !data_fim || !id_local || !id_categoria) {
     return res.status(400).json({
       erro: 'Campos obrigatórios: titulo, data_inicio, data_fim, id_local e id_categoria.'
@@ -75,14 +76,17 @@ export const criarEvento = async (req, res) => {
   try {
     const query = `
       INSERT INTO evento (titulo, descricao, data_inicio, data_fim, id_local, id_categoria)
-      VALUES (${'$titulo'}, ${'$descricao'}, ${'$data_inicio'}, ${'$data_fim'}, ${'$id_local'}, ${'$id_categoria'})
-      RETURNING *
-    `.replace(/\$(\w+)/g, (_, v) => {
-      const vars = { titulo: '$1', descricao: '$2', data_inicio: '$3', data_fim: '$4', id_local: '$5', id_categoria: '$6' }
-      return vars[v]
-    })
-
-    const result = await pool.query(query, [titulo, descricao || null, data_inicio, data_fim, id_local, id_categoria])
+      VALUES (
+        '${titulo}',
+        ${descricao ? `'${descricao}'` : 'NULL'},
+        '${data_inicio}',
+        '${data_fim}',
+        ${id_local},
+        ${id_categoria}
+      )
+      RETURNING *;
+    `
+    const result = await pool.query(query)
 
     res.status(201).json({
       mensagem: 'Evento criado com sucesso.',
@@ -99,33 +103,37 @@ export const atualizarEvento = async (req, res) => {
   const { id } = req.params
   const { titulo, descricao, data_inicio, data_fim, id_local, id_categoria } = req.body
 
+  if (id_local !== undefined || id_categoria !== undefined) {
+    return res.status(400).json({
+      erro: 'Os campos id_local e id_categoria não podem ser alterados após a criação do evento.'
+    })
+  }
+
   const evento = await eventoIDQuery(id)
   if (evento[0] !== 200) {
     res.status(evento[0]).json(evento[1])
     return
   }
 
+  const updates = []
+  if (titulo !== undefined) updates.push(`titulo = '${titulo}'`)
+  if (descricao !== undefined) updates.push(`descricao = '${descricao}'`)
+  if (data_inicio !== undefined) updates.push(`data_inicio = '${data_inicio}'`)
+  if (data_fim !== undefined) updates.push(`data_fim = '${data_fim}'`)
+
+  if (updates.length === 0) {
+    return res.status(400).json({ erro: 'Nenhum campo válido foi enviado para atualização.' })
+  }
+
+  const query = `
+    UPDATE evento
+    SET ${updates.join(', ')}
+    WHERE id_evento = ${id}
+    RETURNING *;
+  `
+
   try {
-    const query = `
-      UPDATE evento
-      SET titulo = ${'$titulo'},
-          descricao = ${'$descricao'},
-          data_inicio = ${'$data_inicio'},
-          data_fim = ${'$data_fim'},
-          id_local = ${'$id_local'},
-          id_categoria = ${'$id_categoria'}
-      WHERE id_evento = ${'$id'}
-      RETURNING *
-    `.replace(/\$(\w+)/g, (_, v) => {
-      const vars = {
-        titulo: '$1', descricao: '$2', data_inicio: '$3',
-        data_fim: '$4', id_local: '$5', id_categoria: '$6', id: '$7'
-      }
-      return vars[v]
-    })
-
-    const result = await pool.query(query, [titulo, descricao || null, data_inicio, data_fim, id_local, id_categoria, id])
-
+    const result = await pool.query(query)
     res.status(200).json({
       mensagem: 'Evento atualizado com sucesso.',
       evento: result.rows[0]
@@ -147,8 +155,11 @@ export const excluirEvento = async (req, res) => {
   }
 
   try {
-    const query = `DELETE FROM evento WHERE id_evento = ${'$id'}`.replace('$id', '$1')
-    await pool.query(query, [id])
+    const query = `
+      DELETE FROM evento
+      WHERE id_evento = ${id};
+    `
+    await pool.query(query)
     res.status(200).json({ mensagem: 'Evento excluído com sucesso.' })
   } catch (err) {
     console.error('Erro ao excluir evento:', err.message)
