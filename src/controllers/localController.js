@@ -1,13 +1,17 @@
+// src/controllers/localController.js
+// RESPONSÁVEL: Richard
+// Controlador para locais
+
 import { pool } from '../config/db.js'
 
 // TODO: APENAS EXEMPLO, NECESSARIO PREENCHER E IMPLEMENTAR
-// listar local
+// Listar local
 export const listarLocais = async (req, res) => {
  
 }
 
 // TODO: APENAS EXEMPLO, NECESSARIO PREENCHER E IMPLEMENTAR
-// criar local
+// Criar local
 export const criarLocal = async (req, res) => {
 
 }
