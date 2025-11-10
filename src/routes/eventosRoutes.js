@@ -10,14 +10,15 @@ import {
   atualizarEvento,
   excluirEvento
 } from '../controllers/eventoController.js'
+import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
 // CRUD de Eventos
-router.get('/', listarEventos)              // /eventos → lista todos
-router.get('/:id', buscarEventoPorId)       // /eventos/:id → busca por ID
-router.post('/', criarEvento)               // /eventos → cria evento
-router.put('/:id', atualizarEvento)         // /eventos/:id → atualiza evento
-router.delete('/:id', excluirEvento)        // /eventos/:id → exclui evento
+router.get('/', authMiddleware, listarEventos)              // /eventos → lista todos
+router.get('/:id', authMiddleware, buscarEventoPorId)       // /eventos/:id → busca por ID
+router.post('/', authMiddleware, criarEvento)               // /eventos → cria evento
+router.put('/:id', authMiddleware, atualizarEvento)         // /eventos/:id → atualiza evento
+router.delete('/:id', authMiddleware, excluirEvento)        // /eventos/:id → exclui evento
 
 export default router

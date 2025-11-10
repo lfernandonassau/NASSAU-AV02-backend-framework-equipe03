@@ -10,14 +10,15 @@ import {
   deletarUsuario,
   buscarUsuarioPorId
 } from '../controllers/usuarioController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js'
 
 const router = express.Router();
 
 // CRUD Usuário 
-router.get('/', listarUsuarios);          // /Usuarios → lista todas
-router.get('/:id', buscarUsuarioPorId);   // /Usuarios/:id → busca por ID
+router.get('/', authMiddleware, listarUsuarios);          // /Usuarios → lista todas
+router.get('/:id', authMiddleware, buscarUsuarioPorId);   // /Usuarios/:id → busca por ID
 router.post('/', criarUsuario);                           // /Usuarios → cria Usuarios
-router.put('/:id', atualizarUsuario);     // /Usuarios/:id → atualiza Usuarios
-router.delete('/:id', deletarUsuario);   // /Usuarios/:id → exclui Usuarios
+router.put('/:id', authMiddleware, atualizarUsuario);     // /Usuarios/:id → atualiza Usuarios
+router.delete('/:id', authMiddleware, deletarUsuario);   // /Usuarios/:id → exclui Usuarios
 
 export default router;
