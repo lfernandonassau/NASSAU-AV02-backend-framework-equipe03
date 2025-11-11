@@ -4,7 +4,7 @@
 
 import { pool } from '../config/db.js'
 
-// 🧩 Função auxiliar para buscar categoria por ID (reutilizável)
+// Função auxiliar para buscar categoria por ID (reutilizável)
 const categoriaIDQuery = async (id) => {
   let output = [] // [statusCode, body]
 
@@ -39,7 +39,7 @@ const categoriaIDQuery = async (id) => {
   }
 }
 
-// 📋 Listar todas as categorias
+// Listar todas as categorias
 export const listarCategorias = async (req, res) => {
   try {
     const query = `
@@ -54,7 +54,7 @@ export const listarCategorias = async (req, res) => {
   }
 }
 
-// 🔍 Buscar categoria por ID
+// Buscar categoria por ID
 export const buscarCategoriaPorId = async (req, res) => {
   const { id } = req.params
   const categoria = await categoriaIDQuery(id)
@@ -62,7 +62,7 @@ export const buscarCategoriaPorId = async (req, res) => {
   res.status(categoria[0]).json(categoria[1])
 }
 
-// ➕ Criar nova categoria
+// Criar nova categoria
 export const criarCategoria = async (req, res) => {
   const { nome, descricao } = req.body
 
@@ -89,7 +89,7 @@ export const criarCategoria = async (req, res) => {
   }
 }
 
-// ✏️ Atualizar categoria existente
+// Atualizar categoria existente
 export const atualizarCategoria = async (req, res) => {
   const { id } = req.params
   const { nome, descricao } = req.body
@@ -124,7 +124,7 @@ export const atualizarCategoria = async (req, res) => {
   }
 }
 
-// 🗑️ Excluir categoria
+// Excluir categoria
 export const excluirCategoria = async (req, res) => {
   const { id } = req.params
 

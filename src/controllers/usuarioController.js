@@ -12,8 +12,7 @@ const userIDQuery = async (id) => {
 
   // Verifica se id é um número inteiro
   if (typeof parseFloat(id) !== "number" || Number.isInteger(parseFloat(id)) !== true) {
-    output[0] = 400
-    output[1] = { Erro: 'O ID do usuário deve ser um número inteiro.' }
+    output[0] = 400; output[1] = { Erro: 'O ID do usuário deve ser um número inteiro.' }
     return output
   }
 
@@ -26,13 +25,11 @@ const userIDQuery = async (id) => {
       return output
     }
 
-    output[0] = 200
-    output[1] = result.rows[0]
+    output[0] = 200; output[1] = result.rows[0]
     return output
   } catch (err) {
     console.error('findUserByID:', err.message)
-    output[0] = 500
-    output[1] = { error: err.message }
+    output[0] = 500; output[1] = { error: err.message }
     return output
   }
 }
@@ -43,8 +40,8 @@ export const listarUsuarios = async (req, res) => {
     const result = await pool.query('SELECT * FROM usuario ORDER BY id_usuario ASC')
     res.json(result.rows)
   } catch (err) {
-    console.error('erro ao listar usuarios:', err.message)
-    res.status(500).json({ error: 'Erro ao listar usuarios' })
+    console.error('Erro ao listar usuários:', err.message)
+    res.status(500).json({ error: 'Erro ao listar usuários' })
   }
 }
 

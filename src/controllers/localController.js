@@ -4,14 +4,13 @@
 
 import { pool } from '../config/db.js'
 
-// 🧩 Função auxiliar para buscar local por ID (reutilizável)
+// Função auxiliar para buscar local por ID (reutilizável)
 const localIDQuery = async (id) => {
   let output = [] // [statusCode, body]
 
   // Valida o formato do ID
   if (typeof parseFloat(id) !== 'number' || !Number.isInteger(parseFloat(id))) {
-    output[0] = 400
-    output[1] = { erro: 'O ID do local deve ser um número inteiro.' }
+    output[0] = 400; output[1] = { erro: 'O ID do local deve ser um número inteiro.' }
     return output
   }
 
@@ -36,7 +35,7 @@ const localIDQuery = async (id) => {
   }
 }
 
-// 📋 Listar todos os locais
+// Listar todos os locais
 export const listarLocais = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM local ORDER BY id_local ASC')
@@ -47,7 +46,7 @@ export const listarLocais = async (req, res) => {
   }
 }
 
-// 🔍 Buscar local por ID
+// Buscar local por ID
 export const buscarLocalPorId = async (req, res) => {
   const { id } = req.params
   const local = await localIDQuery(id)
@@ -86,7 +85,7 @@ export const criarLocal = async (req, res) => {
   }
 }
 
-// ✏️ Atualizar local existente
+// Atualizar local existente
 export const atualizarLocal = async (req, res) => {
   const { id } = req.params
   const { nome, endereco, capacidade } = req.body
@@ -132,7 +131,7 @@ export const atualizarLocal = async (req, res) => {
   }
 }
 
-// 🗑️ Excluir local
+// Excluir local
 export const excluirLocal = async (req, res) => {
   const { id } = req.params
 
