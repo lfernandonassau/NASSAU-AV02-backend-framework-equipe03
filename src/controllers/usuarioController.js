@@ -87,10 +87,9 @@ export const buscarUsuarioPorId = async (req, res) => {
   res.status(user_search[0]).json(user_search[1])
 }
 
-// Atualizar usuario
 export const atualizarUsuario = async (req, res) => {
   const { id } = req.params
-  const { nome, email, senha, tipo } = req.body
+  const { nome, email, senha, tipo, data_nascimento } = req.body
 
   const user = await userIDQuery(id)
   if (user[0] !== 200) {
@@ -99,14 +98,33 @@ export const atualizarUsuario = async (req, res) => {
   }
 
   try {
-    const result = await pool.query(`
-      UPDATE usuario
-      SET nome = '${nome}', email = '${email}', senha = '${senha}', tipo = '${tipo}'
-      WHERE id_usuario = ${id};
-      SELECT * FROM usuario WHERE id_usuario = ${id};
-    `)
+    // Monta dinamicamente apenas os campos enviados no body
+    const updates = []
+    if (nome) updates.push(`nome = '${nome}'`)
+    if (email) updates.push(`email = '${email}'`)
+    if (senha) {
+      const senhaCriptografada = await bcrypt.hash(senha, 10)
+      updates.push(`senha = '${senhaCriptografada}'`)
+    }
+    if (tipo) updates.push(`tipo = '${tipo}'`)
+    if (data_nascimento) updates.push(`data_nascimento = '${data_nascimento}'`)
 
-    res.status(200).json(result[1].rows[0])
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo fornecido para atualização.' })
+    }
+
+    const query = `
+      UPDATE usuario
+      SET ${updates.join(', ')}
+      WHERE id_usuario = ${id}
+      RETURNING *;
+    `
+
+    const result = await pool.query(query)
+    res.status(200).json({
+      message: 'Usuário atualizado com sucesso.',
+      usuario: result.rows[0]
+    })
   } catch (err) {
     console.error('Erro ao atualizar usuario:', err.message)
     res.status(500).json({ error: `Erro ao atualizar usuario: ${err.message}` })
