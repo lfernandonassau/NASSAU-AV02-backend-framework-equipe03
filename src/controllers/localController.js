@@ -8,17 +8,23 @@ import { pool } from '../config/db.js'
 const localIDQuery = async (id) => {
   let output = [] // [statusCode, body]
 
-  // Valida o formato do ID
+  // Verifica se id é um número inteiro
   if (typeof parseFloat(id) !== 'number' || !Number.isInteger(parseFloat(id))) {
     output[0] = 400; output[1] = { erro: 'O ID do local deve ser um número inteiro.' }
     return output
   }
 
   try {
-    const query = `SELECT * FROM local WHERE id_local = ${'$id_local'}`
-    const result = await pool.query(query.replace('$id_local', '$1'), [id])
+    const result = await pool.query(`SELECT * FROM local WHERE id_local = ${'$id_local'}`)
 
-    if (result.rows.length < 1) {
+    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
+      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
+
+      output[0] = 403; output[1] = { Erro: `Este local está ${status}` }
+      return output
+    }
+
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
       output[0] = 404
       output[1] = { erro: `Não existe local com ID '${id}'.` }
       return output
@@ -142,8 +148,7 @@ export const excluirLocal = async (req, res) => {
   }
 
   try {
-    const query = `DELETE FROM local WHERE id_local = ${'$id_local'}`.replace('$id_local', '$1')
-    await pool.query(query, [id])
+    await pool.query(`UPDATE local SET visibilidade = 'excluido' WHERE id_local = ${id}`)
     res.status(200).json({ mensagem: 'Local excluído com sucesso.' })
   } catch (err) {
     console.error('Erro ao excluir local:', err.message)

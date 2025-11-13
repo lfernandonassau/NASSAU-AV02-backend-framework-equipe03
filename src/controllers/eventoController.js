@@ -4,24 +4,27 @@
 
 import { pool } from '../config/db.js'
 
-// 🧩 Função auxiliar para buscar evento por ID (reutilizável)
+// Função auxiliar para buscar evento por ID (reutilizável)
 const eventoIDQuery = async (id) => {
   let output = [] // [statusCode, body]
 
-  if (isNaN(parseInt(id))) {
+  // Verifica se id é um número inteiro
+  if (typeof parseFloat(id) !== "number" || Number.isInteger(parseFloat(id)) !== true) {
     output[0] = 400
     output[1] = { erro: 'O ID do evento deve ser um número inteiro.' }
     return output
   }
 
   try {
-    const query = `
-      SELECT * FROM evento
-      WHERE id_evento = ${id};
-    `
-    const result = await pool.query(query)
+    const result = await pool.query(`SELECT * FROM evento WHERE id_evento = ${id};`)
 
-    if (result.rows.length < 1) {
+    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
+      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
+      output[0] = 403; output[1] = { Erro: `Este evento está ${status}` }
+      return output
+    }
+
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
       output[0] = 404
       output[1] = { erro: `Não existe evento com ID '${id}'.` }
       return output
@@ -38,17 +41,16 @@ const eventoIDQuery = async (id) => {
   }
 }
 
-// 📋 Listar todos os eventos
+// Listar todos os eventos
 export const listarEventos = async (req, res) => {
   try {
-    const query = `
+    const result = await pool.query(`
       SELECT e.*, l.nome AS nome_local, c.nome AS nome_categoria
       FROM evento e
       JOIN local l ON e.id_local = l.id_local
       JOIN categoria c ON e.id_categoria = c.id_categoria
       ORDER BY e.id_evento ASC;
-    `
-    const result = await pool.query(query)
+    `)
     res.status(200).json(result.rows)
   } catch (err) {
     console.error('Erro ao listar eventos:', err.message)
@@ -56,14 +58,14 @@ export const listarEventos = async (req, res) => {
   }
 }
 
-// 🔍 Buscar evento por ID
+// Buscar evento por ID
 export const buscarEventoPorId = async (req, res) => {
   const { id } = req.params
   const evento = await eventoIDQuery(id)
   res.status(evento[0]).json(evento[1])
 }
 
-// ➕ Criar novo evento
+// Criar novo evento
 export const criarEvento = async (req, res) => {
   const { titulo, descricao, data_inicio, data_fim, id_local, id_categoria } = req.body
 
@@ -98,7 +100,7 @@ export const criarEvento = async (req, res) => {
   }
 }
 
-// ✏️ Atualizar evento existente
+// Atualizar evento existente
 export const atualizarEvento = async (req, res) => {
   const { id } = req.params
   const { titulo, descricao, data_inicio, data_fim, id_local, id_categoria } = req.body
@@ -144,7 +146,7 @@ export const atualizarEvento = async (req, res) => {
   }
 }
 
-// 🗑️ Excluir evento
+// Excluir evento
 export const excluirEvento = async (req, res) => {
   const { id } = req.params
 
@@ -155,11 +157,7 @@ export const excluirEvento = async (req, res) => {
   }
 
   try {
-    const query = `
-      DELETE FROM evento
-      WHERE id_evento = ${id};
-    `
-    await pool.query(query)
+    await pool.query(`UPDATE evento SET visibilidade = 'excluido' WHERE id_evento = ${id};`)
     res.status(200).json({ mensagem: 'Evento excluído com sucesso.' })
   } catch (err) {
     console.error('Erro ao excluir evento:', err.message)

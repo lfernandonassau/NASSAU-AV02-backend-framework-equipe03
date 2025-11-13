@@ -19,17 +19,24 @@ const userIDQuery = async (id) => {
   try {
     const result = await pool.query(`SELECT * FROM usuario WHERE id_usuario = ${id}`)
 
-    if (result.rows.length < 1) {
-      output[0] = 404
-      output[1] = { Erro: `Não existe usuário com ID '${id}.'` }
+    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
+      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno // Prioriza a visibilidade 'inativa' sobre o status interno
+      // Equivalente de res.status(403).json()
+      output[0] = 403; output[1] = { Erro: `Este usuário está ${status}` }
       return output
     }
 
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
+      // Equivalente de res.status(404).json()
+      output[0] = 404; output[1] = { Erro: `Não existe usuário com ID '${id}.'` }
+      return output
+    }
+    // Equivalente de res.status(200).json()
     output[0] = 200; output[1] = result.rows[0]
     return output
   } catch (err) {
     console.error('findUserByID:', err.message)
-    output[0] = 500; output[1] = { error: err.message }
+    output[0] = 500; output[1] = { error: err.message } // Equivalente de res.status(500).json()
     return output
   }
 }
@@ -87,10 +94,9 @@ export const buscarUsuarioPorId = async (req, res) => {
   res.status(user_search[0]).json(user_search[1])
 }
 
-// Atualizar usuario
 export const atualizarUsuario = async (req, res) => {
   const { id } = req.params
-  const { nome, email, senha, tipo } = req.body
+  const { nome, email, senha, tipo, data_nascimento } = req.body
 
   const user = await userIDQuery(id)
   if (user[0] !== 200) {
@@ -99,14 +105,33 @@ export const atualizarUsuario = async (req, res) => {
   }
 
   try {
-    const result = await pool.query(`
-      UPDATE usuario
-      SET nome = '${nome}', email = '${email}', senha = '${senha}', tipo = '${tipo}'
-      WHERE id_usuario = ${id};
-      SELECT * FROM usuario WHERE id_usuario = ${id};
-    `)
+    // Monta dinamicamente apenas os campos enviados no body
+    const updates = []
+    if (nome) updates.push(`nome = '${nome}'`)
+    if (email) updates.push(`email = '${email}'`)
+    if (senha) {
+      const senhaCriptografada = await bcrypt.hash(senha, 10)
+      updates.push(`senha = '${senhaCriptografada}'`)
+    }
+    if (tipo) updates.push(`tipo = '${tipo}'`)
+    if (data_nascimento) updates.push(`data_nascimento = '${data_nascimento}'`)
 
-    res.status(200).json(result[1].rows[0])
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo fornecido para atualização.' })
+    }
+
+    const query = `
+      UPDATE usuario
+      SET ${updates.join(', ')}
+      WHERE id_usuario = ${id}
+      RETURNING *;
+    `
+
+    const result = await pool.query(query)
+    res.status(200).json({
+      message: 'Usuário atualizado com sucesso.',
+      usuario: result.rows[0]
+    })
   } catch (err) {
     console.error('Erro ao atualizar usuario:', err.message)
     res.status(500).json({ error: `Erro ao atualizar usuario: ${err.message}` })
@@ -124,7 +149,7 @@ export const deletarUsuario = async (req, res) => {
   }
 
   try {
-    await pool.query(`DELETE FROM usuario WHERE id_usuario = ${id};`)
+    await pool.query(`UPDATE usuario SET visibilidade = 'excluido' WHERE id_usuario = ${id};`)
     res.status(200).json('Usuário apagado com sucesso.')
   } catch (err) {
     console.error('Erro ao apagar usuario:', err.message)

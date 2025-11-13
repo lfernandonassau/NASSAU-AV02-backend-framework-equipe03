@@ -15,14 +15,17 @@ const categoriaIDQuery = async (id) => {
     return output
   }
 
-  try {
-    const query = `
-      SELECT * FROM categoria
-      WHERE id_categoria = ${'${id}'}
-    `
-    const result = await pool.query(query, [id])
+  try { 
+    const result = await pool.query(`SELECT * FROM categoria WHERE id_categoria = '${id}'`)
 
-    if (result.rows.length < 1) {
+    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
+      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
+      status = status.slice(0, status.length -1).padEnd(status.length, "a") // Tornando status em um substantivo feminino
+      output[0] = 403; output[1] = { Erro: `Esta categoria está ${status}` }
+      return output
+    }
+
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
       output[0] = 404
       output[1] = { erro: `Não existe categoria com ID '${id}'.` }
       return output
@@ -72,12 +75,11 @@ export const criarCategoria = async (req, res) => {
   }
 
   try {
-    const query = `
+    const result = await pool.query(`
       INSERT INTO categoria (nome, descricao)
-      VALUES (${ '${nome}' }, ${ '${descricao}' })
+      VALUES ('${nome}', '${descricao}')
       RETURNING *
-    `
-    const result = await pool.query(query, [nome, descricao || null])
+    `)
 
     res.status(201).json({
       mensagem: 'Categoria criada com sucesso.',
@@ -101,18 +103,12 @@ export const atualizarCategoria = async (req, res) => {
   }
 
   try {
-    const query = `
+    const result = await pool.query(`
       UPDATE categoria
-      SET nome = ${'${nome}'},
-          descricao = ${'${descricao}'}
-      WHERE id_categoria = ${'${id}'}
+      SET nome = '${nome}', descricao = '${descricao}'
+      WHERE id_categoria = '${id}'
       RETURNING *
-    `
-    const result = await pool.query(query, [
-      nome || categoria[1].nome,
-      descricao || categoria[1].descricao,
-      id
-    ])
+    `)
 
     res.status(200).json({
       mensagem: 'Categoria atualizada com sucesso.',
@@ -135,11 +131,7 @@ export const excluirCategoria = async (req, res) => {
   }
 
   try {
-    const query = `
-      DELETE FROM categoria
-      WHERE id_categoria = ${'${id}'}
-    `
-    await pool.query(query, [id])
+    await pool.query(`UPDATE categoria SET visibilidade = 'excluido' WHERE id_categoria = ${id};`)
     res.status(200).json({ mensagem: 'Categoria excluída com sucesso.' })
   } catch (err) {
     console.error('Erro ao excluir categoria:', err.message)
