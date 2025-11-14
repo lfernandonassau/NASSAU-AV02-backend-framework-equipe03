@@ -4,6 +4,7 @@
 
 import { pool } from '../config/db.js'
 
+
 const inscricaoIDQuery = async (id) => {
   let output = [] // [código de status HTTP, corpo da resposta (JSON)]
 
@@ -16,7 +17,14 @@ const inscricaoIDQuery = async (id) => {
   try {
     const result = await pool.query(`SELECT * FROM inscricao WHERE id_inscricao = ${id}`)
 
-    if (result.rows.length < 1) {
+    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
+      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
+      status = status.slice(0, status.length -1).padEnd(status.length, "a") // Tornando status em um substantivo feminino
+      output[0] = 403; output[1] = { Erro: `Esta inscrição está ${status}` }
+      return output
+    }
+
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
       output[0] = 404
       output[1] = { Erro: `Não há inscrição com ID '${id}.'` }
       return output
@@ -126,7 +134,6 @@ export const atualizarInscricao = async (req, res) => {
   }
 }
 
-
 // Deletar inscrição
 export const excluirInscricao = async (req, res) => {
   const { id } = req.params
@@ -138,7 +145,7 @@ export const excluirInscricao = async (req, res) => {
   }
 
   try {
-    await pool.query(`DELETE FROM inscricao WHERE id_inscricao = ${id};`)
+    await pool.query(`UPDATE inscricao SET visibilidade = 'excluido' WHERE id_inscricao = ${id};`)
     res.status(200).json('Inscrição apagada com sucesso.')
   } catch (err) {
     console.error('Erro ao apagar inscrição:', err.message)

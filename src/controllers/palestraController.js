@@ -17,7 +17,14 @@ const palestraIDQuery = async (id) => {
   try {
     const result = await pool.query(`SELECT * FROM palestra WHERE id_palestra = ${id}`)
 
-    if (result.rows.length < 1) {
+    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
+      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
+      status = status.slice(0, status.length -1).padEnd(status.length, "a") // Tornando status em um substantivo feminino
+      output[0] = 403; output[1] = { Erro: `Esta palestra está ${status}` }
+      return output
+    }
+    
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
       output[0] = 404
       output[1] = { Erro: `Não há palestra com ID '${id}.'` }
       return output
@@ -137,7 +144,7 @@ export const excluirPalestra = async (req, res) => {
     }
   
     try {
-      await pool.query(`DELETE FROM palestra WHERE id_palestra = ${id};`)
+      await pool.query(`UPDATE palestra SET visibilidade = 'excluido' WHERE id_palestra = ${id};`)
       res.status(200).json('Palestra apagada com sucesso.')
     } catch (err) {
       console.error('Erro ao apagar palestra:', err.message)
