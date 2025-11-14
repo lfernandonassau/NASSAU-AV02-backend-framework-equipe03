@@ -152,3 +152,29 @@ CREATE TRIGGER trigger_verificar_idade_evento
 BEFORE INSERT ON inscricao
 FOR EACH ROW
 EXECUTE FUNCTION verificar_idade_evento();
+
+
+-- ⚙️ Função e trigger para bloquear inscrição de usuários excluídos
+CREATE OR REPLACE FUNCTION bloquear_usuario_excluido()
+RETURNS TRIGGER AS $$
+DECLARE
+  estado TEXT;
+BEGIN
+  SELECT visibilidade INTO estado
+  FROM usuario
+  WHERE id_usuario = NEW.id_usuario;
+
+  IF estado = 'excluido' THEN
+    RAISE EXCEPTION 'Inscrição não permitida: usuário está excluído.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trigger_bloquear_usuario_excluido
+BEFORE INSERT ON inscricao
+FOR EACH ROW
+EXECUTE FUNCTION bloquear_usuario_excluido();
+
