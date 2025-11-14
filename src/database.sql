@@ -178,3 +178,33 @@ BEFORE INSERT ON inscricao
 FOR EACH ROW
 EXECUTE FUNCTION bloquear_usuario_excluido();
 
+
+-- ⚙️ Função que valida a idade do usuário
+CREATE OR REPLACE FUNCTION verificar_data_nascimento_valida()
+RETURNS TRIGGER AS $$
+DECLARE
+  idade INTEGER;
+BEGIN
+  -- Calcula idade
+  SELECT EXTRACT(YEAR FROM age(CURRENT_DATE, NEW.data_nascimento))::int INTO idade;
+
+  -- Idade negativa → data de nascimento no futuro
+  IF idade < 0 THEN
+    RAISE EXCEPTION 'Data de nascimento inválida: usuário não pode ter nascido no futuro.';
+  END IF;
+
+  -- Idade absurda → falsificação
+  IF idade > 120 THEN
+    RAISE EXCEPTION 'Data de nascimento inválida: idade maior que 120 não é permitida.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger que aplica essa regra
+CREATE TRIGGER trigger_validar_data_nascimento
+BEFORE INSERT OR UPDATE ON usuario
+FOR EACH ROW
+EXECUTE FUNCTION verificar_data_nascimento_valida();
+
