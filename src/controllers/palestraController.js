@@ -2,52 +2,26 @@
 // RESPONSÁVEL: Richard
 // Controlador para palestras
 
+import {
+  Entidade,
+  IDQuery,
+  listarColunas,
+  buscarColunaPorId,
+  criarColuna,
+  atualizarColuna,
+  deletarColuna
+} from "./genericController.js"
 import { pool } from '../config/db.js'
 
+const ent = new Entidade('palestra', 'Palestra', true, ['titulo', 'id_evento'], ['descricao', 'id_palestrante']) // URGENT: Lógica genérica não inteiramente implementada até resolver o problema descrito no fim do genericController.js
 
 const palestraIDQuery = async (id) => {
-  let output = [] // [código de status HTTP, corpo da resposta (JSON)]
-
-  // Verifica se id é um número inteiro
-  if (typeof parseFloat(id) !== "number" || Number.isInteger(parseFloat(id)) !== true) {
-    output[0] = 400; output[1] = { Erro: 'O ID do palestra deve ser um número inteiro.' }
-    return output
-  }
-
-  try {
-    const result = await pool.query(`SELECT * FROM palestra WHERE id_palestra = ${id}`)
-
-    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
-      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
-      status = status.slice(0, status.length -1).padEnd(status.length, "a") // Tornando status em um substantivo feminino
-      output[0] = 403; output[1] = { Erro: `Esta palestra está ${status}` }
-      return output
-    }
-    
-    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
-      output[0] = 404
-      output[1] = { Erro: `Não há palestra com ID '${id}.'` }
-      return output
-    }
-
-    output[0] = 200; output[1] = result.rows[0]
-    return output
-  } catch (err) {
-    console.error('palestraIDQuery:', err.message)
-    output[0] = 500; output[1] = { error: err.message }
-    return output
-  }
+  return IDQuery(id, ent)
 }
 
 // Listar palestras
 export const listarPalestras = async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM palestra ORDER BY id_palestra ASC')
-    res.json(result.rows)
-  } catch (err) {
-    console.error('Erro ao listar palestras:', err.message)
-    res.status(500).json({ error: `Erro ao listar palestras: ${err.message}` })
-  }
+  listarColunas(req, res, ent)
 }
 
 
@@ -76,10 +50,7 @@ export const criarPalestra = async (req, res) => {
 
 // Buscar palestras por ID
 export const buscarPalestraPorId = async (req, res) => {
-  const { id } = req.params
-
-  const id_search = await palestraIDQuery(id)
-  res.status(id_search[0]).json(id_search[1])
+  buscarColunaPorId(req, res, ent)
 }
 
 
@@ -135,19 +106,5 @@ export const atualizarPalestra = async (req, res) => {
 
 // Deletar palestras
 export const excluirPalestra = async (req, res) => {
-  const { id } = req.params
-    
-    const user = await palestraIDQuery(id)
-    if (user[0] !== 200) {
-      res.status(user[0]).json(user[1])
-      return
-    }
-  
-    try {
-      await pool.query(`UPDATE palestra SET visibilidade = 'excluido' WHERE id_palestra = ${id};`)
-      res.status(200).json('Palestra apagada com sucesso.')
-    } catch (err) {
-      console.error('Erro ao apagar palestra:', err.message)
-      res.status(500).json({ error: `Erro ao apagar palestra: ${err.message}` })
-    }
+  deletarColuna(req, res, ent)
 }

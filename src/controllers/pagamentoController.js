@@ -2,52 +2,27 @@
 // RESPONSÁVEL: Richard
 // Controlador para pagamentos
 
+import {
+  Entidade,
+  IDQuery,
+  listarColunas,
+  buscarColunaPorId,
+  criarColuna,
+  atualizarColuna,
+  deletarColuna
+} from "./genericController.js"
 import { pool } from '../config/db.js'
 
+const ent = new Entidade('pagamento', 'Pagamento', false, ['id_inscricao', 'valor', 'status']) // URGENT: Lógica genérica não inteiramente implementada até resolver o problema descrito no fim do genericController.js
 
+// ID query do pagamento, apagar após completar a implementação de lógica genérica
 const pagamentoIDQuery = async (id) => {
-  let output = [] // [código de status HTTP, corpo da resposta (JSON)]
-  
-  // Verifica se id é um número inteiro
-  if (typeof parseFloat(id) !== "number" || Number.isInteger(parseFloat(id)) !== true) {
-    output[0] = 400; output[1] = { Erro: 'O ID do pagamento deve ser um número inteiro.' }
-    return output
-  }
-
-  try {
-    const result = await pool.query(`SELECT * FROM pagamento WHERE id_pagamento = ${id}`)
-
-    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
-      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
-      
-      output[0] = 403; output[1] = { Erro: `Este pagamento está ${status}` }
-      return output
-    }
-    
-    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
-      output[0] = 404
-      output[1] = { Erro: `Não há pagamento com ID '${id}.'` }
-      return output
-    }
-
-    output[0] = 200; output[1] = result.rows[0]
-    return output
-  } catch (err) {
-    console.error('pagamentoIDQuery:', err.message)
-    output[0] = 500; output[1] = { error: err.message }
-    return output
-  }
+  return IDQuery(id, ent)
 }
 
 // Listar pagamentos
 export const listarPagamentos = async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM pagamento ORDER BY id_pagamento ASC')
-    res.json(result.rows)
-  } catch (err) {
-    console.error('Erro ao listar pagamentos:', err.message)
-    res.status(500).json({ error: `Erro ao listar pagamentos: ${err.message}` })
-  }
+  listarColunas(req, res, ent)
 }
 
 
@@ -76,10 +51,7 @@ export const criarPagamento = async (req, res) => {
 
 // Buscar pagamentos por ID
 export const buscarPagamentoPorId = async (req, res) => {
-  const { id } = req.params
-
-  const id_search = await pagamentoIDQuery(id)
-  res.status(id_search[0]).json(id_search[1])
+  buscarColunaPorId(req, res, ent)
 }
 
 
@@ -131,19 +103,5 @@ export const atualizarPagamento = async (req, res) => {
 
 // Deletar pagamentos
 export const excluirPagamento = async (req, res) => {
-  const { id } = req.params
-  
-    const user = await pagamentoIDQuery(id)
-    if (user[0] !== 200) {
-      res.status(user[0]).json(user[1])
-      return
-    }
-  
-    try {
-      await pool.query(`UPDATE pagamento SET visibilidade = 'excluido' WHERE id_pagamento = ${id};`)
-      res.status(200).json('Pagamento apagado com sucesso.')
-    } catch (err) {
-      console.error('Erro ao apagar pagamento:', err.message)
-      res.status(500).json({ error: `Erro ao apagar pagamento: ${err.message}` })
-    }
+  deletarColuna(req, res, ent)
 }

@@ -2,67 +2,32 @@
 // RESPONSÁVEL: Richard
 // Controlador para eventos
 
+import {
+  Entidade,
+  IDQuery,
+  listarColunas,
+  buscarColunaPorId,
+  criarColuna,
+  atualizarColuna,
+  deletarColuna
+} from "./genericController.js"
 import { pool } from '../config/db.js'
+
+const ent = new Entidade('evento', 'Evento', false, ['titulo', 'data_inicio', 'data_fim', 'id_local', 'id_categoria'], ['descricao'])
 
 // Função auxiliar para buscar evento por ID (reutilizável)
 const eventoIDQuery = async (id) => {
-  let output = [] // [statusCode, body]
-
-  // Verifica se id é um número inteiro
-  if (typeof parseFloat(id) !== "number" || Number.isInteger(parseFloat(id)) !== true) {
-    output[0] = 400
-    output[1] = { erro: 'O ID do evento deve ser um número inteiro.' }
-    return output
-  }
-
-  try {
-    const result = await pool.query(`SELECT * FROM evento WHERE id_evento = ${id};`)
-
-    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
-      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno
-      output[0] = 403; output[1] = { Erro: `Este evento está ${status}` }
-      return output
-    }
-
-    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
-      output[0] = 404
-      output[1] = { erro: `Não existe evento com ID '${id}'.` }
-      return output
-    }
-
-    output[0] = 200
-    output[1] = result.rows[0]
-    return output
-  } catch (err) {
-    console.error('eventoIDQuery:', err.message)
-    output[0] = 500
-    output[1] = { erro: err.message }
-    return output
-  }
+  return IDQuery(id, ent)
 }
 
 // Listar todos os eventos
 export const listarEventos = async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT e.*, l.nome AS nome_local, c.nome AS nome_categoria
-      FROM evento e
-      JOIN local l ON e.id_local = l.id_local
-      JOIN categoria c ON e.id_categoria = c.id_categoria
-      ORDER BY e.id_evento ASC;
-    `)
-    res.status(200).json(result.rows)
-  } catch (err) {
-    console.error('Erro ao listar eventos:', err.message)
-    res.status(500).json({ erro: 'Erro ao listar eventos.' })
-  }
+  listarColunas(req, res, ent)
 }
 
 // Buscar evento por ID
 export const buscarEventoPorId = async (req, res) => {
-  const { id } = req.params
-  const evento = await eventoIDQuery(id)
-  res.status(evento[0]).json(evento[1])
+  buscarColunaPorId(req, res, ent)
 }
 
 // Criar novo evento
@@ -148,19 +113,5 @@ export const atualizarEvento = async (req, res) => {
 
 // Excluir evento
 export const excluirEvento = async (req, res) => {
-  const { id } = req.params
-
-  const evento = await eventoIDQuery(id)
-  if (evento[0] !== 200) {
-    res.status(evento[0]).json(evento[1])
-    return
-  }
-
-  try {
-    await pool.query(`UPDATE evento SET visibilidade = 'excluido' WHERE id_evento = ${id};`)
-    res.status(200).json({ mensagem: 'Evento excluído com sucesso.' })
-  } catch (err) {
-    console.error('Erro ao excluir evento:', err.message)
-    res.status(500).json({ erro: `Erro ao excluir evento: ${err.message}` })
-  }
+  deletarColuna(req, res, ent)
 }
