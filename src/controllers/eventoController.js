@@ -8,7 +8,6 @@ import {
   listarColunas,
   buscarColunaPorId,
   criarColuna,
-  atualizarColuna,
   deletarColuna
 } from "./genericController.js"
 import { pool } from '../config/db.js'
@@ -32,37 +31,7 @@ export const buscarEventoPorId = async (req, res) => {
 
 // Criar novo evento
 export const criarEvento = async (req, res) => {
-  const { titulo, descricao, data_inicio, data_fim, id_local, id_categoria } = req.body
-
-  if (!titulo || !data_inicio || !data_fim || !id_local || !id_categoria) {
-    return res.status(400).json({
-      erro: 'Campos obrigatórios: titulo, data_inicio, data_fim, id_local e id_categoria.'
-    })
-  }
-
-  try {
-    const query = `
-      INSERT INTO evento (titulo, descricao, data_inicio, data_fim, id_local, id_categoria)
-      VALUES (
-        '${titulo}',
-        ${descricao ? `'${descricao}'` : 'NULL'},
-        '${data_inicio}',
-        '${data_fim}',
-        ${id_local},
-        ${id_categoria}
-      )
-      RETURNING *;
-    `
-    const result = await pool.query(query)
-
-    res.status(201).json({
-      mensagem: 'Evento criado com sucesso.',
-      evento: result.rows[0]
-    })
-  } catch (err) {
-    console.error('Erro ao criar evento:', err.message)
-    res.status(500).json({ erro: `Erro ao criar evento: ${err.message}` })
-  }
+  criarColuna(req, res, ent)
 }
 
 // Atualizar evento existente

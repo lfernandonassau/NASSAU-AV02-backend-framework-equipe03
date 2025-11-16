@@ -54,7 +54,7 @@ export const definirEntidade = async (ent) => {
 }
 
 // Buscar coluna por ID, feita para ser utilizada em todas as consultas de ID (Importar caso o controller haja a própria lógica e precise dessa consulta)
-export const IDQuery = async (id, ent) => { definirEntidade(ent)
+export const IDQuery = async (id, ent) => { if (ent !== 0){definirEntidade(ent)} 
   let output = [] // [código de status HTTP, corpo da resposta (JSON)]
 
   // Verifica se id é um número inteiro
@@ -66,6 +66,13 @@ export const IDQuery = async (id, ent) => { definirEntidade(ent)
   try {
     const result = await pool.query(`SELECT * FROM ${entidade} WHERE id_${entidade} = ${id}`)
 
+    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
+      // Equivalente de res.status(404).json()
+      output[0] = 404; 
+      output[1] = { Erro: `Não existe ${entidade_nome.toLowerCase()} com ID '${id}.'` } // Ex.: "Não existe usuário com ID '69'."
+      return output
+    }
+    
     if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
       let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno // Prioriza a visibilidade 'inativa' sobre o status interno
       
@@ -77,12 +84,7 @@ export const IDQuery = async (id, ent) => { definirEntidade(ent)
       return output
     }
 
-    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") { // ATNEÇÃO!!!!!!! tratar o erro causado pela leitura da visibilidade antes disso
-      // Equivalente de res.status(404).json()
-      output[0] = 404; 
-      output[1] = { Erro: `Não existe ${entidade_nome.toLowerCase()} com ID '${id}.'` } // Ex.: "Não existe usuário com ID '69'."
-      return output
-    }
+
     // Equivalente de res.status(200).json()
     output[0] = 200; 
     output[1] = result.rows[0]
@@ -133,6 +135,15 @@ export const criarColuna = async (req, res, ent) => { definirEntidade(ent)
   }
   console.log("atributos validados")
   
+  // Verifica se há e consulta atributos com "id_" no nome como forma de checar por chaves estrangeiras.
+  if (atributos.toString().includes('id_')){
+    let fkquery = await foreignKeyIDQuery(Object.entries(req.body))
+    if (fkquery !== 1){
+      res.status(400).json(fkquery)
+      return
+    }
+  }
+
   // Formata os valores para coincidirem com a sintaxe de SQL
   let formatted_values = []
   for (const value of Object.values(req.body)) {
@@ -177,6 +188,15 @@ export const atualizarColuna = async (req, res, ent) => {
   if (Object.keys(req.body).length < 1){
     res.status(201).json({error: 'Nenhum campo preenchido para atualizar.'})
     return
+  }
+
+  // Verifica se há e consulta atributos com "id_" no nome como forma de checar por chaves estrangeiras.
+  if (atributos.toString().includes('id_')){
+    let fkquery = await foreignKeyIDQuery(Object.entries(req.body))
+    if (fkquery !== 1){
+      res.status(400).json(fkquery)
+      return
+    }
   }
 
   // Formata os valores para coincidirem com a sintaxe de SQL
@@ -224,4 +244,29 @@ export const deletarColuna = async (req, res, ent) => {
   }
 }
 
-// URGENT: Implementar verificação de ID para chaves estrangeiras. Alguns controllers (avaliacao, certificado, evento, inscricao, pagamento, palestra) não podem usar as funções genéricas de criar e atualizar antes disso.
+// Consultas de ID para chaves estrangeiras centralizadas em uma função
+const foreignKeyIDQuery = async (entries) => {
+  let revert = entidade
+  let returned_errors = []
+
+  for (const att of entries) {
+    if (att[0].includes('id_')){
+      entidade = att[0].substring(3, att[0].length)
+      let query = await IDQuery(att[1], 0)
+
+      if (query[0] != 200){
+        // AVISO: Essa implementação não define as variáveis gramáticas da entidade sendo consultada, então o console vai enviar a mensagem como se fosse a entidade original
+        console.error(`FK (${att[0]}) IDQuery:`, query[1])
+        returned_errors.push(att[0])
+      }
+    }
+  } entidade = revert
+
+  //
+  if (returned_errors.length != 0){
+    let s = returned_errors.length > 1 ? "s" : ""
+    return { error: `Erro ao consultar o${s} campo${s} (${returned_errors}). Consulte-o${s} individualmente para mais detalhes.` }
+  } else {
+    return 1
+  }
+}

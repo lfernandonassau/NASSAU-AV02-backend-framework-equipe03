@@ -2,54 +2,27 @@
 // RESPONSÁVEL: Richard
 // Controlador para usuários
 
+import {
+  Entidade,
+  IDQuery,
+  listarColunas,
+  buscarColunaPorId,
+  deletarColuna
+} from "./genericController.js"
+
 import { pool } from '../config/db.js'
 import bcrypt from 'bcryptjs'
 
+const ent = new Entidade('usuario', 'Usuário', false, ['nome', 'email', 'senha', 'tipo', 'data_nascimento'])
 
-// Buscar usuário por ID, reutilizável em outras funções para reduzir a repetição (nome da função podia ser melhor, mas tô sem ideias)
+// Buscar usuário por ID
 const userIDQuery = async (id) => {
-  let output = [] // [código de status HTTP, corpo da resposta (JSON)]
-
-  // Verifica se id é um número inteiro
-  if (typeof parseFloat(id) !== "number" || Number.isInteger(parseFloat(id)) !== true) {
-    output[0] = 400; output[1] = { Erro: 'O ID do usuário deve ser um número inteiro.' }
-    return output
-  }
-
-  try {
-    const result = await pool.query(`SELECT * FROM usuario WHERE id_usuario = ${id}`)
-
-    if (result.rows[0].visibilidade === "inativo" || result.rows[0].status_interno !== "normal") {
-      let status = result.rows[0].visibilidade === "inativo" ? "inativo" : result.rows[0].status_interno // Prioriza a visibilidade 'inativa' sobre o status interno
-      // Equivalente de res.status(403).json()
-      output[0] = 403; output[1] = { Erro: `Este usuário está ${status}` }
-      return output
-    }
-
-    if (result.rows.length < 1 || result.rows[0].visibilidade === "excluido") {
-      // Equivalente de res.status(404).json()
-      output[0] = 404; output[1] = { Erro: `Não existe usuário com ID '${id}.'` }
-      return output
-    }
-    // Equivalente de res.status(200).json()
-    output[0] = 200; output[1] = result.rows[0]
-    return output
-  } catch (err) {
-    console.error('findUserByID:', err.message)
-    output[0] = 500; output[1] = { error: err.message } // Equivalente de res.status(500).json()
-    return output
-  }
+  return IDQuery(id, ent)
 }
 
 // Listar usuários
 export const listarUsuarios = async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM usuario ORDER BY id_usuario ASC')
-    res.json(result.rows)
-  } catch (err) {
-    console.error('Erro ao listar usuários:', err.message)
-    res.status(500).json({ error: 'Erro ao listar usuários' })
-  }
+  listarColunas(req, res, ent)
 }
 
 // Criar usuário (registro com senha criptografada)
@@ -81,17 +54,14 @@ export const criarUsuario = async (req, res) => {
       usuario: { id: result.rows[0].id, nome, email }
     })
   } catch (err) {
-    console.error('Erro ao criar usuario:', err.message)
-    res.status(500).json({ error: `Erro ao criar usuario: ${err.message}` })
+    console.error('Erro ao criar usuário:', err.message)
+    res.status(500).json({ error: `Erro ao criar usuário: ${err.message}` })
   }
 }
 
 // Buscar usuário por ID, chamado pela rota mas usa a função reutilizável abaixo
 export const buscarUsuarioPorId = async (req, res) => {
-  const { id } = req.params
-
-  const user_search = await userIDQuery(id)
-  res.status(user_search[0]).json(user_search[1])
+  buscarColunaPorId(req, res, ent)
 }
 
 export const atualizarUsuario = async (req, res) => {
@@ -140,19 +110,5 @@ export const atualizarUsuario = async (req, res) => {
 
 // Deletar usuario
 export const deletarUsuario = async (req, res) => {
-  const { id } = req.params
-
-  const user = await userIDQuery(id)
-  if (user[0] !== 200) {
-    res.status(user[0]).json(user[1])
-    return
-  }
-
-  try {
-    await pool.query(`UPDATE usuario SET visibilidade = 'excluido' WHERE id_usuario = ${id};`)
-    res.status(200).json('Usuário apagado com sucesso.')
-  } catch (err) {
-    console.error('Erro ao apagar usuario:', err.message)
-    res.status(500).json({ error: `Erro ao apagar usuario: ${err.message}` })
-  }
+  deletarColuna(req, res, ent)
 }
