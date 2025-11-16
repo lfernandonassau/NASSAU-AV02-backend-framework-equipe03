@@ -12,6 +12,7 @@ import locaisRoutes from './routes/locaisRoutes.js'
 import pagamentosRoutes from './routes/pagamentosRoutes.js'
 import palestrasRoutes from './routes/palestrasRoutes.js'
 import usuarioRoutes from './routes/usuarioRoutes.js'
+import loginRoutes from './routes/loginRoutes.js'
 import './config/db.js' // importa apenas para inicializar pool
 
 dotenv.config()
@@ -28,6 +29,7 @@ app.use('/locais', locaisRoutes)
 app.use('/pagamentos', pagamentosRoutes)
 app.use('/palestras', palestrasRoutes)
 app.use('/usuarios', usuarioRoutes)
+app.use('/auth', loginRoutes)
 
 app.get('/', (req, res) => res.send('Organize seu evento conosco!'))
 
