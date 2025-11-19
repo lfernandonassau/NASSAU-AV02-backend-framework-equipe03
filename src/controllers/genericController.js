@@ -48,13 +48,14 @@ export const definirEntidade = async (ent) => {
   o = (subst_f != true) ? "o" : "a"
   e = (subst_f != true) ? "e" : "a"
 
-  console.log(`Entidade definida. Nome: ${entidade} (${entidade_nome}) Plural(${entidade_plural});
+  //QUERO MAIS NAHMM
+  /*console.log(`Entidade definida. Nome: ${entidade} (${entidade_nome}) Plural(${entidade_plural});
     Substantivo feminino: ${subst_f};
-    Atributos: ${atributos}; ${atributos_opcionais}`)
+    Atributos: ${atributos}; ${atributos_opcionais}`) */
 }
 
 // Buscar coluna por ID, feita para ser utilizada em todas as consultas de ID (Importar caso o controller haja a própria lógica e precise dessa consulta)
-export const IDQuery = async (id, ent) => { if (ent !== 0){definirEntidade(ent)} 
+export const IDQuery = async (id, ent) => { if (ent !== 0) { definirEntidade(ent)} 
   let output = [] // [código de status HTTP, corpo da resposta (JSON)]
 
   // Verifica se id é um número inteiro
@@ -116,7 +117,6 @@ export const listarColunas = async (req, res, ent) => { definirEntidade(ent)
   }
 }
 
-
 // Criar nova coluna na entidade
 export const criarColuna = async (req, res, ent) => { definirEntidade(ent)
   // Verifica se todos os atributos obrigatórios estão preenchidos no corpo da requisição
@@ -144,18 +144,19 @@ export const criarColuna = async (req, res, ent) => { definirEntidade(ent)
     }
   }
 
-  // Formata os valores para coincidirem com a sintaxe de SQL
-  let formatted_values = []
-  for (const value of Object.values(req.body)) {
-    formatted_values.push(value.padStart(value.length + 1, "'").padEnd(value.length + 2, "'")) // tem jeitos bem melhores de fazer isso mas tô com preguiça de refatorar essa única linha
-  }
+  // Usa query parametrizada para evitar problemas com tipos (número, datas, etc.) e injeção SQL
+  const keys = Object.keys(req.body)
+  const values = Object.values(req.body).map(v => v) // mantém os tipos originais
+  const placeholders = keys.map((_, idx) => `$${idx + 1}`)
+
+  const queryText = `
+    INSERT INTO ${entidade} (${keys.join(', ')})
+    VALUES (${placeholders.join(', ')})
+    RETURNING *;
+  `
 
   try {
-    const result = await pool.query(`
-      INSERT INTO ${entidade} (${Object.keys(req.body) + ""})
-      VALUES (${formatted_values + ""})
-      RETURNING *;
-    `)
+    const result = await pool.query(queryText, values)
     
     res.status(201).json({
       message: `${entidade_nome} criad${o} com sucesso.`,
@@ -199,29 +200,37 @@ export const atualizarColuna = async (req, res, ent) => {
     }
   }
 
-  // Formata os valores para coincidirem com a sintaxe de SQL
-  let formatted_values = ""
+  // Usa query parametrizada para montar o SET de forma segura
+  const entries = Object.entries(req.body)
+  const setClauses = []
+  const params = []
 
-  for (const entry of Object.entries(req.body)) {
-    formatted_values = formatted_values + (entry[0] + "=" + `'${entry[1]}',`)
-  }
-  formatted_values = formatted_values.slice(0, formatted_values.length - 1) // Remove a última vírgula
+  entries.forEach(([key, value], idx) => {
+    params.push(value)
+    setClauses.push(`${key} = $${idx + 1}`)
+  })
+
+  // id como último parâmetro
+  params.push(id)
+  const idParamIndex = params.length
+
+  const queryText = `
+    UPDATE ${entidade}
+    SET ${setClauses.join(', ')}
+    WHERE id_${entidade} = $${idParamIndex}
+    RETURNING *;
+  `
 
   try {
-    const result = await pool.query(`
-      UPDATE ${entidade}
-      SET ${formatted_values}
-      WHERE id_${entidade} = ${id}
-      RETURNING *;
-    `)
+    const result = await pool.query(queryText, params)
     
     res.status(201).json({
       message: `${entidade_nome} atualizad${o} com sucesso.`,
       result: result.rows[0]
     })
   } catch (err) {
-    console.error(`Erro ao atualizar ${entidade_nome.toLowerCase}:`, err.message)
-    res.status(500).json({ error: `Erro ao atualizar ${entidade_nome.toLowerCase}: ${err.message}` })
+    console.error(`Erro ao atualizar ${entidade_nome.toLowerCase()}:`, err.message)
+    res.status(500).json({ error: `Erro ao atualizar ${entidade_nome.toLowerCase()}: ${err.message}` })
   }
 }
 
@@ -262,7 +271,6 @@ const foreignKeyIDQuery = async (entries) => {
     }
   } entidade = revert
 
-  //
   if (returned_errors.length != 0){
     let s = returned_errors.length > 1 ? "s" : ""
     return { error: `Erro ao consultar o${s} campo${s} (${returned_errors}). Consulte-o${s} individualmente para mais detalhes.` }
