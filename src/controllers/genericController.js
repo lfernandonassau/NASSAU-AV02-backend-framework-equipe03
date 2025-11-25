@@ -271,6 +271,7 @@ const foreignKeyIDQuery = async (entries) => {
     }
   } entidade = revert
 
+  //
   if (returned_errors.length != 0){
     let s = returned_errors.length > 1 ? "s" : ""
     return { error: `Erro ao consultar o${s} campo${s} (${returned_errors}). Consulte-o${s} individualmente para mais detalhes.` }

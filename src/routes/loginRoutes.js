@@ -18,13 +18,18 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(`SELECT * FROM usuario WHERE email = '${email}'`)
+    const result = await pool.query(
+      "SELECT * FROM usuario WHERE email = $1 LIMIT 1",
+      [email]
+    )
+
     if (result.rows.length === 0) {
       return res.status(404).json({ erro: 'Usuário não encontrado.' })
     }
 
     const usuario = result.rows[0]
     const senhaValida = await bcrypt.compare(senha, usuario.senha)
+
     if (!senhaValida) {
       return res.status(401).json({ erro: 'Senha incorreta.' })
     }
@@ -35,7 +40,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '2h' }
     )
 
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Login realizado com sucesso.',
       usuario: {
         id_usuario: usuario.id_usuario,
@@ -46,10 +51,11 @@ router.post('/login', async (req, res) => {
       token
     })
   } catch (err) {
-    console.error('Erro ao realizar login:', err.message)
-    res.status(500).json({ erro: `Erro ao realizar login: ${err.message}` })
+    console.error('Erro ao realizar login:', err)
+    return res.status(500).json({ erro: 'Erro ao realizar login.' })
   }
 })
+
 
 // Logout de usuário (invalidação de token em memória)
 router.post('/logout', (req, res) => {

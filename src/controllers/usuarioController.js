@@ -27,37 +27,42 @@ export const listarUsuarios = async (req, res) => {
 
 // Criar usuário (registro com senha criptografada)
 export const criarUsuario = async (req, res) => {
-  const { nome, email, senha, tipo = 'participante' } = req.body
+  const { nome, email, senha, tipo = 'participante', data_nascimento } = req.body;
 
-  if (!nome || !email || !senha || !tipo) {
-    return res.status(400).json({ erro: 'Nome, email, senha e tipo são campos obrigatórios' })
+  if (!nome || !email || !senha || !tipo || !data_nascimento) {
+    return res.status(400).json({ erro: 'Nome, email, senha, tipo e data_nascimento são obrigatórios.' });
   }
 
   try {
     // Verifica se já existe usuário com esse email
-    const usuarioExistente = await pool.query(`SELECT * FROM usuario WHERE email = '${email}'`)
+    const usuarioExistente = await pool.query(`SELECT * FROM usuario WHERE email = $1`, [email]);
     if (usuarioExistente.rows.length > 0) {
-      return res.status(400).json({ error: 'Este email já está cadastrado.' })
+      return res.status(400).json({ error: 'Este email já está cadastrado.' });
     }
 
-    // Criptografa a senha antes de salvar
-    const senhaCriptografada = await bcrypt.hash(senha, 10)
+    // Criptografa a senha
+    const senhaCriptografada = await bcrypt.hash(senha, 10);
 
-    const result = await pool.query(`
-      INSERT INTO usuario (nome, email, senha, tipo)
-      VALUES ('${nome}', '${email}', '${senhaCriptografada}', '${tipo}')
+    // INSERE INCLUINDO A DATA DE NASCIMENTO
+    const result = await pool.query(
+      `
+      INSERT INTO usuario (nome, email, senha, tipo, data_nascimento)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
-    `)
+      `,
+      [nome, email, senhaCriptografada, tipo, data_nascimento]
+    );
 
     res.status(201).json({
       message: 'Usuário criado com sucesso.',
-      usuario: { id: result.rows[0].id, nome, email }
-    })
+      usuario: result.rows[0]
+    });
   } catch (err) {
-    console.error('Erro ao criar usuário:', err.message)
-    res.status(500).json({ error: `Erro ao criar usuário: ${err.message}` })
+    console.error('Erro ao criar usuário:', err.message);
+    res.status(500).json({ error: `Erro ao criar usuário: ${err.message}` });
   }
 }
+
 
 // Buscar usuário por ID, chamado pela rota mas usa a função reutilizável abaixo
 export const buscarUsuarioPorId = async (req, res) => {

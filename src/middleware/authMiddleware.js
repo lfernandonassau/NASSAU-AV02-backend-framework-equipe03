@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 export const tokenBlacklist = new Set() //lista pra tokens invalidos
 
 // Variável de controle (bypass)
-const FLIP_BYPASS = 1 //1 ativa o middleware e 0 desativa
+const FLIP_BYPASS = 0 //1 ativa o middleware e 0 desativa
 
 // Middleware para validar o token JWT
 export const authMiddleware = (req, res, next) => {

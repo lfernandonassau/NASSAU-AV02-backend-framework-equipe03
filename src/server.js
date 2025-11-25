@@ -33,7 +33,8 @@ app.use('/auth', loginRoutes)
 
 app.get('/', (req, res) => res.send('Organize seu evento conosco!'))
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3005;
+
 app.listen(PORT, () => {
   const host = process.env.HOST || 'localhost'
   console.log(`Servidor rodando em http://${host}:${PORT}`)
