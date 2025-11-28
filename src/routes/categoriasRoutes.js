@@ -10,15 +10,18 @@ import {
   atualizarCategoria,
   excluirCategoria
 } from '../controllers/categoriaController.js'
+
 import { authMiddleware } from '../middleware/authMiddleware.js'
+import { adminMiddleware } from '../middleware/adminMiddleware.js'
+import { rateLimit } from '../middleware/rateLimitMiddleware.js' 
 
 const router = express.Router()
 
 // CRUD de Categorias
-router.get('/', authMiddleware, listarCategorias)           // /categorias → lista todas
-router.get('/:id', authMiddleware, buscarCategoriaPorId)    // /categorias/:id → busca por ID
-router.post('/', authMiddleware, criarCategoria)            // /categorias → cria categoria
-router.put('/:id', authMiddleware, atualizarCategoria)      // /categorias/:id → atualiza categoria
-router.delete('/:id', authMiddleware, excluirCategoria)     // /categorias/:id → exclui categoria
+router.get('/', authMiddleware, rateLimit(10, 'minutos'), listarCategorias)                 // /categorias → lista todas
+router.get('/:id', authMiddleware, rateLimit(20, 'minutos'), buscarCategoriaPorId)          // /categorias/:id → busca por ID
+router.post('/', authMiddleware, adminMiddleware, rateLimit(3, 'minutos'), criarCategoria)  // /categorias → cria categoria
+router.put('/:id', authMiddleware, adminMiddleware, rateLimit(5, 'minutos'), atualizarCategoria) // /categorias/:id → atualiza categoria
+router.delete('/:id', authMiddleware, adminMiddleware, rateLimit(3, 'minutos'), excluirCategoria) // /categorias/:id → exclui categoria
 
 export default router

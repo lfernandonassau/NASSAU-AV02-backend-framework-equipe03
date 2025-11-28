@@ -5,6 +5,7 @@
 import express from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+
 import { pool } from '../config/db.js'
 import { tokenBlacklist } from '../middleware/authMiddleware.js'
 
@@ -24,14 +25,14 @@ router.post('/login', async (req, res) => {
     )
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ erro: 'Usuário não encontrado.' })
+      return res.status(404).json({ erro: 'Usuário ou senha incorretos.' })
     }
 
     const usuario = result.rows[0]
     const senhaValida = await bcrypt.compare(senha, usuario.senha)
 
     if (!senhaValida) {
-      return res.status(401).json({ erro: 'Senha incorreta.' })
+      return res.status(401).json({ erro: 'Usuário ou senha incorretos.' })
     }
 
     const token = jwt.sign(
@@ -55,7 +56,6 @@ router.post('/login', async (req, res) => {
     return res.status(500).json({ erro: 'Erro ao realizar login.' })
   }
 })
-
 
 // Logout de usuário (invalidação de token em memória)
 router.post('/logout', (req, res) => {
